@@ -1,7 +1,7 @@
 ---
-title: "Hands On Exercise 01"
+title: "Take-home Exercise 01"
 description: |
-  Programming ElegantDataVis with ggplot2.
+  Creating data visualisation beyond default.
 author:
   - name: Rakendu 
     url: https://www.linkedin.com/in/rakendu-ramesh/
@@ -12,16 +12,22 @@ output: distill::distill_article
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
 ```
 
 # Overview
 
-In this Hands on exercise, we will practice creating different visualsations using GGPLOT2.
+In this Take-home exercise, we will apply the skills learnt in Visual Analytics Lesson 1 to reveal the demographics of the City of Engagement, Ohio USA by using appropriate static statistical graphics methods. We will process the data using **tidyverse** family of packages. We will then use **ggplot2** and its extensions to prepare the statistical graphics to understand the demographics of the city of Engagement, Ohio USA. 
+
+### Dataset
+The dataset used is available for download [*here*](https://vast-challenge.github.io/2022/).
 
 # Getting Started
 
-Below code chunk will load the required packages.
+We will first load the required packages using the below code chunk
 
 ```{r}
 packages = c('tidyverse','ggdist','gghalves')
