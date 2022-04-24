@@ -355,10 +355,15 @@ ggplot(data=participants_data,
 # Conclusion
 
 Selecting the graphs from above which better depict the demographic of Engagement, Ohio USA, let us combine them into a single Visual which can be used to represent the city. From the below visualizations, we can infer the following
+
 * Population of Engagement Ohio USA is symmetrically distributed within the range of 10 - 60, and we do not have data about the population outside this range.
+
 * More than 50% of the population has high school level education with less than 10% having lower educational qualification.
+
 * Households have size of 1,2 or 3 with 2 being the most common.
+
 * 70% of the population have kids.
+
 * Joviality index of the residents is on the lower side with higher joviality seen in people from larger households o rhouseholds with kids.
 
 ```{r}
