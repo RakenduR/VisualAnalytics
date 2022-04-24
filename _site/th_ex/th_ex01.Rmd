@@ -34,7 +34,7 @@ Following are the steps taken to undesrtand the demographics of the region.
 We will first load the required packages using the below code chunk
 
 ```{r}
-packages = c('tidyverse','ggdist','gghalves','ggthemes','hrbrthemes','ggridges')
+packages = c('tidyverse','ggdist','gghalves','ggthemes','hrbrthemes','ggridges','patchwork')
 for(p in packages){
   if(!require(p, character.only = T)){
     install.packages(p)
@@ -62,7 +62,7 @@ head(participants_data,10,7)
 ```
 ### Understanding the distribution of age 
 
-The code chunk below creates a histogram of age by using geom_histogram() of ggplot2.From the visualization we can see that the age of the participants ranges from 15 to 60 approximately. To get the definite minimum and maximum age values, let us use a boxplot.
+The code chunk below creates a histogram of age by using geom_histogram() of ggplot2.From the visualization we can see that the age of the participants ranges from 15 to 60 approximately.
 
 
 ```{r}
@@ -77,8 +77,8 @@ ggplot(data=participants_data,
   theme_ipsum(grid ="Y")
 
 ```
-From the boxplot, it is clear that the dataset contains participants in the range 10 to 60 which is understandably the desired range to consider for city planning. This means that we do not get an idea about the proportion of kids below the age of 10 and senior residents above the age of 60 from this dataset. The mean and median of the data also coincide indicating that the Participants in the age range 10-60 are symmetrically distributed.
-
+To get the definite minimum and maximum age values, let us use a boxplot.
+ 
 ```{r}
 ggplot(data = participants_data,
       aes(y = "", x = age)) +
@@ -90,11 +90,17 @@ ggplot(data = participants_data,
   ylab("")
 
 ```
-Let us further update the histogram to show the median and mean and use it as the final visualization for age demographic.
+
+From the boxplot, it is clear that the dataset contains participants in the range 10 to 60 which is understandably the desired range to consider for city planning. This means that we do not get an idea about the proportion of kids below the age of 10 and senior residents above the age of 60 from this dataset.
+
+The mean and median of the data also coincide indicating that the Participants in the age range 10-60 are symmetrically distributed.
+
+
+Let us further update the age histogram to show the median and mean and use it as the final visualization for age demographic.
 
 ```{r}
 
-ggplot(data=participants_data,
+p1 <- ggplot(data=participants_data,
        aes(x = age)) +
   geom_histogram(bins=20,
                  color = "grey25",
@@ -121,12 +127,13 @@ ggplot(data=participants_data,
                  y = 75,
                  angle =90)),
             color = "grey30")
+print(p1)
 
 ```
 
 ### Understanding the distribution of Education Level
 
-Lets look at the education level of participants using a bar graph. The graph below shows the education levels of the participants.
+Let us look at the education level of participants using a bar graph. The code chunk below generates a bar graph of the education levels of the participants.
 
 ```{r}
 ggplot(data=participants_data,
@@ -149,13 +156,13 @@ ggplot(data=participants_data,
 
 ```
 
-Though the graph provides an idea aboout the distribution of Education Level among the participants, the Education Levels can be considered ordinal with Low as the lowest level and graduate as the highest level. Let us view the above graph after fixing the order of the Education Level.We will also change the colors to go with the Age distribution histogram.
+Though the graph provides an idea aboout the distribution of Education Level among the participants, the Education Levels can be considered ordinal with Low as the lowest level and graduate as the highest level. Let us view the above graph after fixing the order of the Education Level. We will also change the colors to go with the Age distribution histogram.
 
 
 ```{r}
 
 level_order <- c('Low','HighSchoolOrCollege','Bachelors','Graduate')
-ggplot(data=participants_data,
+p2 <- ggplot(data=participants_data,
       aes(x=factor(educationLevel,levels = level_order)))+
   geom_bar(color = "grey25",
            fill="light blue") +
@@ -172,37 +179,84 @@ ggplot(data=participants_data,
       1),"%")),
     hjust=1,
     color = "grey25",
-    size=3.5)
+    size=3.5)+
+  ggtitle("Distribution of Education")
+
+print(p2)
 
 ```
 
 ### Understanding the household size of participants
+
+The below code chunk generates a bar graph indicating the distribution of household sizes among the participants.
+
 From the bar graph we can see that majority of the participants come from households with 2 members. Closely behind are households with 1 and 2 members.
 
 ```{r}
-ggplot(data=participants_data,
+p3 <- ggplot(data=participants_data,
       aes(x=householdSize))+
   geom_bar(color = "grey25",
            fill="light blue") +
-  coord_flip() +
-  ylab("No of Participants") +
+  ylab("No of\nParticipants") +
   xlab("Household Size") +
-  theme_ipsum(axis_title_size = 12, grid ="X")+
+  ylim(0,400) +
+  theme_ipsum(axis_title_size = 12, grid ="Y")+
   theme(axis.title.y=element_text(angle =0,
-                                  margin=margin(r=-10)),
-        axis.line.x = element_line(color="grey25", size = 0.02)) +
+                                  margin=margin(r=20))) +
   geom_text(stat="count",
     aes(label=paste0(..count..,", ",
     round(..count../sum(..count..)*100,
       1),"%")),
-    hjust=1.05,
+    vjust=-0.5,
     color = "grey25",
-    size=3.5)
+    size=3.5)+
+  ggtitle("Distribution of Household Size")
+
+print(p3)
 
 ```
+### Understanding the participants with and without kids
+
+```{r}
+p4 <- ggplot(data=participants_data,
+      aes(x=haveKids))+
+  geom_bar(color = "grey25",
+           fill="light blue") +
+  ylab("No of\nParticipants") +
+  xlab("Have Kids") +
+  ylim(0,750) +
+  theme_ipsum(axis_title_size = 12, grid ="Y")+
+  theme(axis.title.y=element_text(angle =0,
+                                  margin=margin(r=20))) +
+  geom_text(stat="count",
+    aes(label=paste0(..count..,", ",
+    round(..count../sum(..count..)*100,
+      1),"%")),
+    vjust=-0.5,
+    color = "grey25",
+    size=3.5)+
+  ggtitle("Participants with and without kids")
+
+print(p4)
+
+```
+
 ### Understanding the joviality of participants
 
+Let us understand the joviality distribution of participants using a density plot
 
+```{r}
+p5 <- ggplot(participants_data,
+       aes(x=joviality))+
+  geom_density(color = "grey25",
+               fill="light Blue")+
+  ggtitle("Distribution of Joviality")+
+  theme_ipsum(axis_title_size = 12, grid="Y")+
+  theme(axis.line.y = element_line(color="grey25", size = 0.02))+
+  scale_y_continuous(expand = c(0,0),limits = c(0,1.5))
+
+print(p5)
+```
 
 
 
@@ -223,7 +277,8 @@ ggplot(participants_data,
               grid = "X")+
   theme(axis.title.y=element_text(angle =0,
                                   margin=margin(r=-30)),
-        axis.line.x = element_line(color="grey25", size = 0.02))
+        axis.line.x = element_line(color="grey25", size = 0.02))+
+  ggtitle("Joviality by kids")
 
 ```
 
@@ -231,3 +286,89 @@ ggplot(participants_data,
 
 
 
+### Understanding the joviality of participants by household size
+
+From the Density plot below, we can see that more participants with 3 household members have higher joviality than those 2 or 1 members.
+
+```{r}
+
+ggplot(participants_data,
+       aes(x = joviality, y = factor(householdSize))) +
+  geom_density_ridges(rel_min_height =0.01, scale = 0.95,
+                    color = "grey25",
+                    fill = "light blue")+
+  ylab("Household Size") +
+  xlim(0,1)+
+  theme_ipsum(axis_title_size = 12,
+              grid = "X")+
+  theme(axis.title.y=element_text(angle =0,
+                                  margin=margin(r=-10)),
+        axis.line.x = element_line(color="grey25", size = 0.02))+
+  ggtitle("Joviality by Household Size")
+
+
+```
+
+Let us see if a violin plot gives more insights about joviality of participants from different household sizes. It is more obvious from violin plot that more participants with 3 household members have a higher joviality index.
+
+```{r}
+
+p6 <- ggplot(data = participants_data,
+  aes(y = joviality,
+  x= factor(householdSize))) +
+  geom_violin(color ="grey25",
+              fill="light blue") +
+  xlab("Household Size")+
+  ylab("Joviality")+
+  theme_ipsum(axis_title_size=12, grid ="Y")+
+  theme(axis.title.y = element_text(angle=0))+
+  ggtitle("Joviality index by Household size")
+print(p6)
+
+```
+### Understanding the Interest Groups of Participants
+We will use a bar chart to see if the Interest Group of Participants depends on whether they have kids or not. Plotting the no. of participants does not give us a true picture because from the previous visualizations, we have seen that almost 2/3rd of the participants do not have kids. Let us take a look at the same graph using percentage. 
+
+```{r}
+ggplot(data=participants_data,
+      aes(x=interestGroup, fill=haveKids))+
+  geom_bar(position="dodge")+
+  theme_ipsum(grid = "Y",axis_title_size =12)+
+  ylab("No. of\nParticipants")+
+  xlab("Interest Group")+
+  theme(axis.title.y = element_text(angle=0))
+
+```
+We can draw similar insights from the percent bar graph, that participants are symmetrically distributed amoong the interest groups and the fact whether they have kids or not does not seem to influence much.
+
+```{r}
+ggplot(data=participants_data,
+      aes(x=interestGroup, fill=haveKids))+
+  geom_bar(position="fill")+
+  theme_ipsum(grid = "Y",axis_title_size =12)+
+  ylab("Percent of\nParticipants")+
+  xlab("Interest Group")+
+  theme(axis.title.y = element_text(angle=0))
+
+```
+
+# Conclusion
+
+Selecting the graphs from above which better depict the demographic of Engagement, Ohio USA, let us combine them into a single Visual which can be used to represent the city. From the below visualizations, we can infer the following
+* Population of Engagement Ohio USA is symmetrically distributed within the range of 10 - 60, and we do not have data about the population outside this range.
+* More than 50% of the population has high school level education with less than 10% having lower educational qualification.
+* Households have size of 1,2 or 3 with 2 being the most common.
+* 70% of the population have kids.
+* Joviality index of the residents is on the lower side with higher joviality seen in people from larger households o rhouseholds with kids.
+
+```{r}
+
+
+p1
+p2
+p3
+p4
+p5
+p6
+
+```
