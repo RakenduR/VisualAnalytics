@@ -25,12 +25,16 @@ In this Take-home exercise, we will apply the skills learnt in Visual Analytics 
 ### Dataset
 The dataset used is available for download [*here*](https://vast-challenge.github.io/2022/).
 
-# Getting Started
+# Step by Step Description
+
+Following are the steps taken to undesrtand the demographics of the region.
+
+## Getting Started
 
 We will first load the required packages using the below code chunk
 
 ```{r}
-packages = c('tidyverse','ggdist','gghalves')
+packages = c('tidyverse','ggdist','gghalves','ggthemes','hrbrthemes')
 for(p in packages){
   if(!require(p, character.only = T)){
     install.packages(p)
@@ -40,25 +44,64 @@ for(p in packages){
 
 ```
 
-# Importing Data
+## Importing Data
 
-The code chunk below imports *Exam_data.csv* from the data folder by using [`read_csv()`](https://readr.tidyverse.org/reference/read_delim.html) function of [**readr**](https://readr.tidyverse.org/index.html) package into R and save it as a tibble dataframe called *exam_data*.
+The code chunk below imports *Participants.csv* from the data folder by using [`read_csv()`](https://readr.tidyverse.org/reference/read_delim.html) function of [**readr**](https://readr.tidyverse.org/index.html) package into R and save it as a tibble dataframe called *participants_data*.
 
 ```{r}
-exam_data <- read_csv("data/Exam_data.csv")
+participants_data <- read_csv("data/Participants.csv")
+
+```
+### Overview of the data
+
+Lets take a look at the data. Brief glance at the columns available in the Participants data shows that it contains household size, age, education level, have kids and joviality. All these are useful attributes to understand the demographics of a region. Let us look at each of these attributes individually to analyse their usefulness further.
+
+```{r}
+head(participants_data,7)
+
+```
+### Understanding the distribution of age 
+
+The code chunk below creates a histogram of age by using geom_histogram() of ggplot2.From the visualization we can see that the age of the participants ranges from 15 to 60 approximately. To get the definite minimum and maximum age values, let us use a boxplot.
+
+
+```{r}
+
+ggplot(data=participants_data,
+       aes(x = age)) +
+  geom_histogram(bins=20,
+                 color = "grey25",
+                 fill = "grey90")+
+  ggtitle("Distribution of Age")+
+  theme_ipsum(axis_title_size = 12,
+              base_size = 12,
+              grid ="Y")+
+  ylab("No. of Participants")
+
+```
+From the boxplot, it is clear that the dataset contains participants in the range 10 to 60 which is understandably the desired range to consider for city planning. This means that we do not get an idea about the proportion of kids below the age of 10 and senior residents above the age of 60 from this dataset. The mean and median of the data also coincide indicating that the Participants in the age range 10-60 are symmetrically distributed.
+
+```{r}
+ggplot(data = participants_data,
+      aes(y = "", x = age)) +
+  geom_boxplot() +
+  stat_summary(geom = "point",
+              fun = mean,
+              colour = "red",
+              size = 4)+
+  ylab("")
 
 ```
 
-# A Simple Bar Chart
 
-The code chunk below creates a bar chart byusing geom_bar() of ggplot2.
+### Understanding the distribution of Education Level
 
-```{r}
 
-ggplot(data=exam_data,
-       aes(x = RACE)) +
-  geom_bar()
 
-```
+
+
+
+
+
 
 

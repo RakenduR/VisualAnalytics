@@ -25,12 +25,16 @@ In this Take-home exercise, we will apply the skills learnt in Visual Analytics 
 ### Dataset
 The dataset used is available for download [*here*](https://vast-challenge.github.io/2022/).
 
-# Getting Started
+# Step by Step Description
+
+Following are the steps taken to undesrtand the demographics of the region.
+
+## Getting Started
 
 We will first load the required packages using the below code chunk
 
 ```{r}
-packages = c('tidyverse','ggdist','gghalves')
+packages = c('tidyverse','ggdist','gghalves','ggthemes','hrbrthemes','ggridges')
 for(p in packages){
   if(!require(p, character.only = T)){
     install.packages(p)
@@ -40,25 +44,190 @@ for(p in packages){
 
 ```
 
-# Importing Data
+## Importing Data
 
-The code chunk below imports *Exam_data.csv* from the data folder by using [`read_csv()`](https://readr.tidyverse.org/reference/read_delim.html) function of [**readr**](https://readr.tidyverse.org/index.html) package into R and save it as a tibble dataframe called *exam_data*.
+The code chunk below imports *Participants.csv* from the data folder by using [`read_csv()`](https://readr.tidyverse.org/reference/read_delim.html) function of [**readr**](https://readr.tidyverse.org/index.html) package into R and save it as a tibble dataframe called *participants_data*.
 
 ```{r}
-exam_data <- read_csv("data/Exam_data.csv")
+participants_data <- read_csv("data/Participants.csv")
+
+```
+### Overview of the data
+
+Lets take a look at the data. Brief glance at the columns available in the Participants data shows that it contains household size, age, education level, have kids and joviality. All these are useful attributes to understand the demographics of a region. Let us look at each of these attributes individually to analyse their usefulness further.
+
+```{r}
+head(participants_data,10,7)
+
+```
+### Understanding the distribution of age 
+
+The code chunk below creates a histogram of age by using geom_histogram() of ggplot2.From the visualization we can see that the age of the participants ranges from 15 to 60 approximately. To get the definite minimum and maximum age values, let us use a boxplot.
+
+
+```{r}
+
+ggplot(data=participants_data,
+       aes(x = age)) +
+  geom_histogram(bins=20,
+                 color = "grey25",
+                 fill = "grey90")+
+  ggtitle("Distribution of Age")+
+  ylab("No. of Participants") +
+  theme_ipsum(grid ="Y")
+
+```
+From the boxplot, it is clear that the dataset contains participants in the range 10 to 60 which is understandably the desired range to consider for city planning. This means that we do not get an idea about the proportion of kids below the age of 10 and senior residents above the age of 60 from this dataset. The mean and median of the data also coincide indicating that the Participants in the age range 10-60 are symmetrically distributed.
+
+```{r}
+ggplot(data = participants_data,
+      aes(y = "", x = age)) +
+  geom_boxplot() +
+  stat_summary(geom = "point",
+              fun = mean,
+              colour = "red",
+              size = 4) +
+  ylab("")
+
+```
+Let us further update the histogram to show the median and mean and use it as the final visualization for age demographic.
+
+```{r}
+
+ggplot(data=participants_data,
+       aes(x = age)) +
+  geom_histogram(bins=20,
+                 color = "grey25",
+                 fill = "light blue")+
+  ggtitle("Distribution of Age")+
+  ylab("No. of Participants") +
+  theme_ipsum(axis_title_size = 12,
+              grid ="Y") +
+  geom_vline(aes(xintercept=mean(age,na.rm=T)),
+              color="red",
+              linetype="dashed",
+              size=1) +
+  geom_vline(aes(xintercept=median(age,na.rm=T)),
+              color="grey30",
+              linetype="dashed",
+              size=1)+
+  geom_text((aes(x= mean(age,na.rm=T)+1,
+                 label="mean",
+                 y = 75,
+                 angle =90)),
+            color= "red")+
+  geom_text((aes(x= median(age,na.rm=T)-1,
+                 label="median",
+                 y = 75,
+                 angle =90)),
+            color = "grey30")
 
 ```
 
-# A Simple Bar Chart
+### Understanding the distribution of Education Level
 
-The code chunk below creates a bar chart byusing geom_bar() of ggplot2.
+Lets look at the education level of participants using a bar graph. The graph below shows the education levels of the participants.
+
+```{r}
+ggplot(data=participants_data,
+      aes(x=reorder(educationLevel,educationLevel,function(x)length(x))))+
+  geom_bar() +
+  coord_flip() +
+  ylab("No of Participants") +
+  xlab("Education Level") +
+  theme(axis.title.y=element_text(angle =0,
+                                  margin=margin(r=-70)),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.minor.x = element_blank()) +
+  geom_text(stat="count",
+    aes(label=paste0(..count..,", ",
+    round(..count../sum(..count..)*100,
+      1),"%")),
+    hjust=1,
+    color = "white")
+
+```
+
+Though the graph provides an idea aboout the distribution of Education Level among the participants, the Education Levels can be considered ordinal with Low as the lowest level and graduate as the highest level. Let us view the above graph after fixing the order of the Education Level.We will also change the colors to go with the Age distribution histogram.
+
 
 ```{r}
 
-ggplot(data=exam_data,
-       aes(x = RACE)) +
-  geom_bar()
+level_order <- c('Low','HighSchoolOrCollege','Bachelors','Graduate')
+ggplot(data=participants_data,
+      aes(x=factor(educationLevel,levels = level_order)))+
+  geom_bar(color = "grey25",
+           fill="light blue") +
+  coord_flip() +
+  ylab("No of Participants") +
+  xlab("Education Level") +
+  theme_ipsum(axis_title_size = 12, grid ="X")+
+  theme(axis.title.y=element_text(angle =0,
+                                  margin=margin(r=-70)),
+        axis.line.x = element_line(color="grey25", size = 0.02)) +
+  geom_text(stat="count",
+    aes(label=paste0(..count..,", ",
+    round(..count../sum(..count..)*100,
+      1),"%")),
+    hjust=1,
+    color = "grey25",
+    size=3.5)
 
 ```
+
+### Understanding the household size of participants
+From the bar graph we can see that majority of the participants come from households with 2 members. Closely behind are households with 1 and 2 members.
+
+```{r}
+ggplot(data=participants_data,
+      aes(x=householdSize))+
+  geom_bar(color = "grey25",
+           fill="light blue") +
+  coord_flip() +
+  ylab("No of Participants") +
+  xlab("Household Size") +
+  theme_ipsum(axis_title_size = 12, grid ="X")+
+  theme(axis.title.y=element_text(angle =0,
+                                  margin=margin(r=-10)),
+        axis.line.x = element_line(color="grey25", size = 0.02)) +
+  geom_text(stat="count",
+    aes(label=paste0(..count..,", ",
+    round(..count../sum(..count..)*100,
+      1),"%")),
+    hjust=1.05,
+    color = "grey25",
+    size=3.5)
+
+```
+### Understanding the joviality of participants
+
+
+
+
+
+### Understanding the joviality of participants with and without kids
+
+From the Density plot below, we can see that more participants with kids have higher joviality than those without kids.
+
+```{r}
+
+ggplot(participants_data,
+       aes(x = joviality, y = haveKids)) +
+  geom_density_ridges(rel_min_height =0.01, scale = 0.95,
+                    color = "grey25",
+                    fill = "light blue")+
+  ylab("Have Kids") +
+  xlim(0,1)+
+  theme_ipsum(axis_title_size = 12,
+              grid = "X")+
+  theme(axis.title.y=element_text(angle =0,
+                                  margin=margin(r=-30)),
+        axis.line.x = element_line(color="grey25", size = 0.02))
+
+```
+
+
+
 
 
