@@ -362,9 +362,9 @@ Selecting the graphs from above which better depict the demographic of Engagemen
 
 * Households have size of 1,2 or 3 with 2 being the most common.
 
-* 70% of the population have kids.
+* 70% of the population do not have kids.
 
-* Joviality index of the residents is on the lower side with higher joviality seen in people from larger households o rhouseholds with kids.
+* Joviality index of the residents is on the lower side with higher joviality seen in people from larger households or households with kids.
 
 ```{r}
 
@@ -375,5 +375,14 @@ p3
 p4
 p5
 p6
+
+```
+
+
+```{r}
+
+
+p1/p2
+
 
 ```
