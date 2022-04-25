@@ -358,7 +358,7 @@ ggplot(data=participants_data,
 Selecting the graphs from above which better depict the demographic of Engagement, Ohio USA, let us combine them into a single Visual which can be used to represent the city. From the below visualizations, we can infer the following
 
 
-```{r fig.width=14, fig.height=10}
+```{r fig.width=14, fig.height=14}
 
 
 patchwork <- (p1 + p2)/(p3 + p4)/(p5 + p6)
