@@ -357,6 +357,23 @@ ggplot(data=participants_data,
 
 Selecting the graphs from above which better depict the demographic of Engagement, Ohio USA, let us combine them into a single Visual which can be used to represent the city. From the below visualizations, we can infer the following
 
+
+```{r fig.width=14, fig.height=10}
+
+
+patchwork <- (p1 + p2)/(p3 + p4)/(p5 + p6)
+patchwork + plot_annotation(
+  title = "Demographics of Engagement, Ohio, USA",
+  subtitle = "The below plots reveal the Demographics of the city",
+  theme = theme(plot.title = element_text(size = 22, face="bold"),
+                plot.background = element_rect(fill = NA,
+                                               colour = 'black',
+                                               size = 1),
+                plot.margin = margin(2,2,1,1,"cm"))
+)
+
+```
+
 * Population of Engagement Ohio USA is symmetrically distributed within the range of 10 - 60, and we do not have data about the population outside this range.
 
 * More than 50% of the population has high school level education with less than 10% having lower educational qualification.
@@ -367,15 +384,5 @@ Selecting the graphs from above which better depict the demographic of Engagemen
 
 * Joviality index of the residents is on the lower side with higher joviality seen in people from larger households or households with kids.
 
-```{r fig.width=12, fig.height=10}
 
-
-patchwork <- (p1 + p2)/(p3 + p4)/(p5 + p6)
-patchwork + plot_annotation(
-  title = "Demographics of Engagement, Ohio, USA",
-  subtitle = "The below plots reveal the Demographics of the city",
-  theme = theme(plot.title = element_text(size = 22, face="bold"))
-)
-
-```
 
