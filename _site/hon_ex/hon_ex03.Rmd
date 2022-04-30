@@ -1,0 +1,95 @@
+---
+title: "Hands on Ex03"
+description: |
+  A new article created using the Distill format.
+author:
+  - name: Nora Jones 
+    url: https://example.com/norajones
+    affiliation: Spacely Sprockets
+    affiliation_url: https://example.com/spacelysprokets
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+Distill is a publication format for scientific and technical writing, native to the web. 
+
+Learn more about using Distill for R Markdown at <https://rstudio.github.io/distill>.
+
+
+```{r}
+packages = c('ggiraph','plotly','DT','patchwork','gganimate','tidyverse','readxl','gifski','gapminder','treemap')
+for(p in packages){
+  if(!require (p, character.only =T )){
+  install.packages(p)
+  }
+library(p,character.only =T)
+}
+```
+
+```{r}
+exam_data <- read_csv("data/Exam_data.csv")
+```
+
+
+```{r}
+p <- ggplot(data=exam_data,
+            aes(x = MATHS)) +
+    geom_dotplot_interactive(
+            aes(tooltip = ID),
+                stackgroups = TRUE,
+                binwidth = 1,
+                method = "histodot") +
+    scale_y_continuous(NULL,
+                      breaks = NULL)
+
+girafe(ggobj = p,
+      width_svg = 6,
+      height_svg = 6*0.618
+)
+```
+
+```{r}
+GDP <- read_csv("data/GDP.csv")
+
+WorldCountry <- read_csv("data/WorldCountry.csv")
+```
+
+```{r}
+GDP_selected <- GDP %>%
+  mutate(Values = as.numeric(`2020`)) %>%
+  select(1:3, Values) %>%
+  pivot_wider(names_from = `Series Name`,
+              values_from = `Values`) %>%
+  left_join(y=WorldCountry, by = c("Country Code" = "ISO-alpha3 Code"))
+```
+
+
+```{r}
+
+treemap(GDP_selected,
+        index=c("Continent", "Country Name"),
+        vSize="GDP (current US$)",
+        vColor="GDP per capita (current US$)",
+        type="value",
+        algorithm = "squarified",
+        title="GDP (current US$) , 2020",
+        title.legend = "GDP per capita (current US$)"
+        )
+```
+
+
+```{r eval = False}
+library(devtools)
+install_github("timelyportfolio/d3treeR")
+```
+
+```{r}
+
+library(d3treeR)
+
+d3tree(tm, rootname = "World")
+```

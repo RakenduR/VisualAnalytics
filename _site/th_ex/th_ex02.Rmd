@@ -1,0 +1,97 @@
+---
+title: "Take Home Exercise 02"
+description: |
+  A peer review for mutual learning and growth.
+author:
+  - name: Rakendu Ramesh 
+    url: https://www.linkedin.com/in/rakendu-ramesh/
+    affiliation: Singapore Management University
+    affiliation_url: https://www.linkedin.com/showcase/smumitb/
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+
+# Overview
+
+In this Take Home exercise, I would like to review my esteemed peer Jiarui Cui's [*Take Home Ex 01*](https://jiarui-cui-isss608.netlify.app/th_ex/th_ex01). With this review, I hope to learn from my peer and hope to shed some light on the highlights of her first assignment.
+
+
+## Getting Started
+
+We will first load the required packages using the below code chunk
+
+```{r}
+packages = c('tidyverse','ggdist','gghalves','ggthemes','hrbrthemes','ggridges','patchwork')
+for(p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p, character.only = T)
+}
+
+```
+
+## Importing Data
+
+The code chunk below imports *Participants.csv* from the data folder by using [`read_csv()`](https://readr.tidyverse.org/reference/read_delim.html) function of [**readr**](https://readr.tidyverse.org/index.html) package into R and save it as a tibble dataframe called *participants_data*.
+
+```{r}
+participants_data <- read_csv("data/Participants.csv")
+
+```
+
+## Boxplot to understand the joviality  by education level
+
+Interestingly, a boxplot is used to understand the joviality of different groups based on education level. The mean point is also added which makes it easier to compare the mean joviality of different education level groups, It can be seen that the bachelors have a higher joviality. Let us try to represent this using a density plot.
+
+I believe the overlapping plots makes comparison easier. We can see that the joviality is generally low among all education levels. Also it can be seen taht more people with Low Education Level have low joviality where as the graduate group has a more equitable density at low and high joviality values.
+
+```{r fig.width=10, fig.height=8}
+
+ggplot(participants_data,
+       aes(x=joviality, colour = educationLevel))+
+  geom_density(size =1)+
+  ggtitle("Distribution of Joviality for different Education Levels")+
+  theme_ipsum(axis_title_size = 12, grid="Y")+
+  theme(axis.title.y = element_text(angle=0))+
+  scale_y_continuous(expand = c(0,0),limits = c(0,1.5))
+
+```
+
+## Disturbing trend of fewer people with higher education level having kids.
+
+The stacked bar chart very clearly shows that there are fewer people with kids who are graduates and bachelors educated. Let us take a look at the same data compared to the total number of people at different education levels to see if we can draw any more inferences.
+
+From the plot below, we can see that the proportion of participants with kids is relatively low for all education levels. Therefore, we do not have enough evidence to state that more participants with higher education do not have kids.
+
+```{r fig.width=20, fig.height=12}
+
+level_order <- c('Low','HighSchoolOrCollege','Bachelors','Graduate')
+d <- participants_data
+d_bg <- d[,-3]
+ggplot(d, aes(x = factor(educationLevel,levels = level_order))) + 
+  geom_bar(data=d_bg, fill="grey", alpha=.5) +
+  geom_bar(colour="black", fill = "light blue") + 
+  coord_flip()+
+  guides(fill = FALSE) + 
+   theme_ipsum(axis_title_size = 12, grid ="X")+
+  theme(axis.title.y=element_text(angle= 0, margin = margin(r=-70)))+
+  xlab("Education Level")+
+  ylab("No. of participants")+
+    facet_wrap(~ haveKids,
+             labeller = labeller(haveKids = c("TRUE" = "Have Kids",
+                                              "FALSE" = "Do not have kids")))+
+  ggtitle("Study of relationship between education levels and kids")
+
+```
+
+
+
