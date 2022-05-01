@@ -53,23 +53,32 @@ jobs <- read_csv('data/Jobs.csv')
 
 Interestingly, a boxplot is used to understand the joviality of different groups based on education level. The mean point is also added which makes it easier to compare the mean joviality of different education level groups, It can be seen that the bachelors have a higher joviality. Let us try to represent this using a density plot.
 
-I believe the overlapping plots makes comparison easier. We can see that the joviality is generally low among all education levels. Also it can be seen taht more people with Low Education Level have low joviality where as the graduate group has a more equitable density at low and high joviality values.
+I believe the overlapping plots makes comparison easier. We can see that the joviality is generally low among all education levels. Also it can be seen that more people with Low Education Level have low joviality where as the graduate group has a more equitable density at low and high joviality values.
 
-```{r fig.width=10, fig.height=8}
+```{r fig.width=12, fig.height=8}
 
-ggplot(participants_data,
+P1 <- ggplot(participants_data,
        aes(x=joviality, colour = educationLevel))+
   geom_density(size =1)+
   labs(colour = "Education Level")+
-  ggtitle("Distribution of Joviality for different Education Levels")+
-  theme_ipsum(axis_title_size = 12, grid="Y")+
-  theme(axis.title.y = element_text(angle=0),
+  ylab("Density")+
+  xlab("Joviality")+
+  ggtitle("Distribution of Joviality by Education Levels")+
+  theme(axis.title.y = element_text(angle=0, margin = margin(r=10)),
         axis.title = element_text(size=16),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_line(colour = "grey90"),
+        panel.grid.major.y = element_line(colour = "grey90"),
+        panel.background = element_rect(fill = "white"),
         axis.text = element_text(size =16),
         legend.title = element_text(size =16),
-        legend.text = element_text(size = 16)
+        legend.text = element_text(size = 16),
+        plot.title = element_text(size =20,hjust = 0.5)
         )+
   scale_y_continuous(expand = c(0,0),limits = c(0,1.5))
+
+P1
 
 ```
 
@@ -84,7 +93,7 @@ From the plot below, we can see that the proportion of participants with kids is
 level_order <- c('Low','HighSchoolOrCollege','Bachelors','Graduate')
 d <- participants_data
 d_bg <- d[,-3]
-ggplot(d, aes(x = factor(educationLevel,levels = level_order))) + 
+P2 <- ggplot(d, aes(x = factor(educationLevel,levels = level_order))) + 
   geom_bar(data=d_bg, fill="grey", alpha=.5) +
   geom_bar(colour="black", fill = "light blue") + 
   coord_flip()+
@@ -100,11 +109,13 @@ ggplot(d, aes(x = factor(educationLevel,levels = level_order))) +
                                               "FALSE" = "Do not have kids")))+
   ggtitle("Study of relationship between education levels and kids")
 
+P2
+
 ```
 
 ## Joviality index by age group
 
-The density plot for joviality index for different age groups clearly show that more people in the age group 18-30 have higher joviality index where as more people in th eage group 40 -60 have lower joviality. Having kids seem to have made a difference in the joviality of age group 18-40. The plot is clear. I would only recommend minor aesthetic changes for easy readability, like making the y axis title horizontal, removing the minor grid lines, increasing thickness of the density lines and adding yrs to the facet wrap labels.
+The density plot for joviality index for different age groups clearly show that more people in the age group 18-30 have higher joviality index where as more people in th eage group 40 -60 have lower joviality. Having kids seem to have made a difference in the joviality of age group 18-40. The plot is clear. I would only recommend minor aesthetic changes for easy readability, like making the y axis title horizontal, removing the minor grid lines, increasing thickness of the density lines and adding yrs to the facet wrap labels. I would also add a title to all the visualizations.
 
 
 
@@ -113,7 +124,7 @@ participants_data$agegroup <- cut(participants_data$age, breaks = c(17,30,40,50,
                              labels = c("18 - 30 yrs","30 - 40 yrs","40 - 50 yrs","50 - 60 yrs"))
 
 
-ggplot(data=participants_data, 
+P3 <- ggplot(data=participants_data, 
        aes(x =joviality,colour = haveKids)) +
   geom_density(size = 1)+
   ylab("Density")+
@@ -134,9 +145,9 @@ ggplot(data=participants_data,
   facet_wrap(~ agegroup,nrow = 2)+
   annotate("segment", x=-Inf, xend=Inf, y=-Inf, yend=-Inf, colour = "grey50")+
   annotate("segment", x=-Inf, xend=-Inf, y=-Inf, yend=Inf, colour = "grey50")+
-  ggtitle("Joviality density by kids")
+  ggtitle("Joviality of Age groups with and without kids")
 
-
+P3
 ```
 
 ## Joviality Index by Education Level
@@ -173,7 +184,7 @@ ggplot(data=participants_data,
         )+
   annotate("segment", x=-Inf, xend=Inf, y=-Inf, yend=-Inf, colour = "grey50")+
   annotate("segment", x=-Inf, xend=-Inf, y=-Inf, yend=Inf, colour = "grey50")+
-  ggtitle("Joviality by Education Level")
+  ggtitle("Joviality by Education Level with and without kids")
 
 ```
 
@@ -186,7 +197,7 @@ jobs$educationRequirement <- factor(jobs$educationRequirement,
                                                  "Bachelors", "Graduate"))
 cbp1 <- c("#E69F00", "#56B4E9","#F0E442", "#CC79A7")
 
-ggplot(data=jobs, aes(y = hourlyRate,
+P4 <- ggplot(data=jobs, aes(y = hourlyRate,
                       x = educationRequirement,
                       fill = educationRequirement)) + 
   labs(fill = "Education Requirement") +
@@ -211,7 +222,7 @@ ggplot(data=jobs, aes(y = hourlyRate,
         plot.title = element_text(size =20,hjust = 0.5))+
   ggtitle("Salary rate by Education Requirement")
 
-
+P4
 
 ```
 
@@ -219,3 +230,34 @@ ggplot(data=jobs, aes(y = hourlyRate,
 
 Finally, a conclusion will be nice, pointing out the highlights which help us to understand the demographic of the city and also combine the corresponding visualizations using patchwork.
 
+
+```{r fig.width = 20, fig.height=20}
+patchwork <- (P1 + P4)/ P2 /P3
+
+patchwork + plot_annotation(
+  title = "Demographics of Engagement, Ohio, USA",
+  subtitle = "The below plots reveal the Demographics of the city",
+  theme = theme(plot.title = element_text(size = 22, face="bold"),
+                plot.background = element_rect(fill = NA,
+                                               colour = 'black',
+                                               size = 1),
+                plot.margin = margin(1,1,0.5,0.5,"cm"))
+)
+```
+From the analysis and visualization of the Participants data, we can draw the following inferences about the demographic of Engagement, Ohio, USA.
+
+
+* People with higher education levels have higher joviality
+
+
+* Joviality is higher for Age group 18-40 and lower for age group 40 - 60
+
+
+* Joviality is higher in the age group 18 - 40 for people with kids
+
+
+* Salary rate is higher for jobs with higher Education Education Requirements
+
+
+
+<p style="text-align: center;">----***----</p>
