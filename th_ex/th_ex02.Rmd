@@ -45,6 +45,7 @@ The code chunk below imports *Participants.csv* from the data folder by using [`
 
 ```{r}
 participants_data <- read_csv("data/Participants.csv")
+jobs <- read_csv('data/Jobs.csv')
 
 ```
 
@@ -59,9 +60,15 @@ I believe the overlapping plots makes comparison easier. We can see that the jov
 ggplot(participants_data,
        aes(x=joviality, colour = educationLevel))+
   geom_density(size =1)+
+  labs(colour = "Education Level")+
   ggtitle("Distribution of Joviality for different Education Levels")+
   theme_ipsum(axis_title_size = 12, grid="Y")+
-  theme(axis.title.y = element_text(angle=0))+
+  theme(axis.title.y = element_text(angle=0),
+        axis.title = element_text(size=16),
+        axis.text = element_text(size =16),
+        legend.title = element_text(size =16),
+        legend.text = element_text(size = 16)
+        )+
   scale_y_continuous(expand = c(0,0),limits = c(0,1.5))
 
 ```
@@ -72,7 +79,7 @@ The stacked bar chart very clearly shows that there are fewer people with kids w
 
 From the plot below, we can see that the proportion of participants with kids is relatively low for all education levels. Therefore, we do not have enough evidence to state that more participants with higher education do not have kids.
 
-```{r fig.width=20, fig.height=12}
+```{r  fig.width=14, fig.height=6}
 
 level_order <- c('Low','HighSchoolOrCollege','Bachelors','Graduate')
 d <- participants_data
@@ -82,9 +89,11 @@ ggplot(d, aes(x = factor(educationLevel,levels = level_order))) +
   geom_bar(colour="black", fill = "light blue") + 
   coord_flip()+
   guides(fill = FALSE) + 
-   theme_ipsum(axis_title_size = 12, grid ="X")+
-  theme(axis.title.y=element_text(angle= 0, margin = margin(r=-70)))+
-  xlab("Education Level")+
+   theme_ipsum(axis_title_size = 16, grid ="X")+
+  theme(axis.title.y=element_text(angle= 0, margin = margin(r=-70)),
+        axis.title = element_text(size=16),
+        axis.text = element_text(size =16))+
+  xlab("Education\nLevel")+
   ylab("No. of participants")+
     facet_wrap(~ haveKids,
              labeller = labeller(haveKids = c("TRUE" = "Have Kids",
@@ -93,5 +102,120 @@ ggplot(d, aes(x = factor(educationLevel,levels = level_order))) +
 
 ```
 
+## Joviality index by age group
 
+The density plot for joviality index for different age groups clearly show that more people in the age group 18-30 have higher joviality index where as more people in th eage group 40 -60 have lower joviality. Having kids seem to have made a difference in the joviality of age group 18-40. The plot is clear. I would only recommend minor aesthetic changes for easy readability, like making the y axis title horizontal, removing the minor grid lines, increasing thickness of the density lines and adding yrs to the facet wrap labels.
+
+
+
+```{r  fig.width=12, fig.height=8}
+participants_data$agegroup <- cut(participants_data$age, breaks = c(17,30,40,50,60), 
+                             labels = c("18 - 30 yrs","30 - 40 yrs","40 - 50 yrs","50 - 60 yrs"))
+
+
+ggplot(data=participants_data, 
+       aes(x =joviality,colour = haveKids)) +
+  geom_density(size = 1)+
+  ylab("Density")+
+  xlab("Joviality")+
+  labs(colour = "Have Kids")+
+  theme(axis.title.y=element_text(angle =0, margin = margin(t=-50,r=10)),
+        axis.title.x=element_text(margin = margin(t=10)),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_line(colour = "grey90"),
+        panel.grid.major.y = element_line(colour = "grey90"),
+        panel.background = element_rect(fill = "white"),
+        axis.title = element_text(size=16),
+        axis.text = element_text(size =16),
+        plot.title = element_text(size =20,hjust = 0.5),
+        legend.title = element_text(size =16),
+        legend.text = element_text(size = 16))+
+  facet_wrap(~ agegroup,nrow = 2)+
+  annotate("segment", x=-Inf, xend=Inf, y=-Inf, yend=-Inf, colour = "grey50")+
+  annotate("segment", x=-Inf, xend=-Inf, y=-Inf, yend=Inf, colour = "grey50")+
+  ggtitle("Joviality density by kids")
+
+
+```
+
+## Joviality Index by Education Level
+
+The same aesthetic changes can be applied to Jovilaity index of participants having kids and not by their education level.
+ 
+```{r  fig.width=12, fig.height=8}
+level_order <- c('Low','HighSchoolOrCollege','Bachelors','Graduate')
+
+participants_data$educationLevel <- factor(participants_data$educationLevel, levels = level_order)
+
+ggplot(data=participants_data, 
+       aes(x =joviality,colour = haveKids)) +
+  geom_density(size = 1)+
+  facet_wrap(~ educationLevel,nrow = 2,labeller = labeller(educationLevel = c("Low" = "Low",
+                                                                              "HighSchoolOrCollege" = "High School or College",
+                                                                              "Bachelors" = "Bachelors",
+                                                                              "Graduate" = "Graduate")))+
+  ylab("Density")+
+  xlab("Joviality")+
+  labs(colour='Have Kids')+
+  theme(axis.title.y=element_text(angle =0, margin = margin(t=-50,r=10)),
+        axis.title.x=element_text(margin = margin(t=10)),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_line(colour = "grey90"),
+        panel.grid.major.y = element_line(colour = "grey90"),
+        panel.background = element_rect(fill = "white"),
+        axis.title = element_text(size=16),
+        axis.text = element_text(size =16),
+        plot.title = element_text(size =20,hjust = 0.5),
+        legend.title = element_text(size =16),
+        legend.text = element_text(size = 16)
+        )+
+  annotate("segment", x=-Inf, xend=Inf, y=-Inf, yend=-Inf, colour = "grey50")+
+  annotate("segment", x=-Inf, xend=-Inf, y=-Inf, yend=Inf, colour = "grey50")+
+  ggtitle("Joviality by Education Level")
+
+```
+
+## Hourly Rate by Education Requirement
+This graph is a good addition to the demographic study of the city. Though it is not specific about the people, it does say about their living standards. We know from the above graphs that the majority of the city are High School or college educated. From the box plot below, we can see that their salary rates is the second lowest. I would only make aesthetic changes to this boxplot for better clarity and readability. I will also remove the Legend since it is the same as the axis labels,
+
+```{r  fig.width=10, fig.height=8}
+jobs$educationRequirement <- factor(jobs$educationRequirement,
+                                      levels = c("Low", "HighSchoolOrCollege",
+                                                 "Bachelors", "Graduate"))
+cbp1 <- c("#E69F00", "#56B4E9","#F0E442", "#CC79A7")
+
+ggplot(data=jobs, aes(y = hourlyRate,
+                      x = educationRequirement,
+                      fill = educationRequirement)) + 
+  labs(fill = "Education Requirement") +
+  geom_boxplot() +
+  scale_fill_manual(values = cbp1) +
+  ylim(0, 50) +
+  stat_summary(geom = "point",fun="mean") +
+  ylab("Hourly Rate ($)")+
+  xlab("Education\nRequirement")+
+  coord_flip()+
+  theme(axis.title.y=element_text(angle =0, margin = margin(t=-50,r=-50)),
+        axis.title.x=element_text(margin = margin(t=10)),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_line(colour = "grey90"),
+        panel.grid.major.y = element_line(colour = "grey90"),
+        panel.background = element_rect(fill = "white"),
+        axis.text = element_text(size =16),
+        axis.line = element_line(color="grey25", size = 0.02),
+        axis.title = element_text(size=16),
+        legend.position = "none",
+        plot.title = element_text(size =20,hjust = 0.5))+
+  ggtitle("Salary rate by Education Requirement")
+
+
+
+```
+
+## Conclusion
+
+Finally, a conclusion will be nice, pointing out the highlights which help us to understand the demographic of the city and also combine the corresponding visualizations using patchwork.
 
