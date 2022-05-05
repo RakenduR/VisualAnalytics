@@ -1,0 +1,48 @@
+---
+title: "Take Home Exercise 03"
+description: |
+  A Study on the Financial health of the residents og Engagement, Ohio, USA.
+author:
+  - name: Rakendu Ramesh 
+    url: https://www.linkedin.com/in/rakendu-ramesh/
+    affiliation: Singapore Management University
+    affiliation_url: https://www.linkedin.com/showcase/smumitb/
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+# Overview
+In this Take Home exercise, we strive to answer the following questions about the financial health of the residents of Enagement, Ohio, USA.
+
+* How does the financial health of the residents change over the period covered by the dataset?
+
+* How do wages compare to the overall cost of living in Engagement?
+
+* Are there groups that appear to exhibit similar patterns? 
+
+
+## Getting Started
+
+We will first load the required packages using the below code chunk
+
+```{r}
+packages = c('tidyverse','ggdist','gghalves','ggthemes','hrbrthemes','ggridges','patchwork')
+for(p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p, character.only = T)
+}
+
+```
+
+
+
+
