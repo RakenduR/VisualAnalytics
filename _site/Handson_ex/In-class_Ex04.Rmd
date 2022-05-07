@@ -12,7 +12,8 @@ output: distill::distill_article
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE,
+                      fig.retina = 3)
 ```
 
 
@@ -21,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE
 
 ## Getting Started
 
-We will first load the required packages using the below code chunk. We will start off by using [*ggstatsplot*](https://cran.r-project.org/web/packages/ggstatsplot/index.html) and [*tidyverse*](https://www.tidyverse.org/packages/)
+We will first load the required packages using the below code chunk. We will start off by using [*ggstatsplot*](https://indrajeetpatil.github.io/ggstatsplot/) and [*tidyverse*](https://www.tidyverse.org/packages/)
 
 
 ```{r}
@@ -39,3 +40,24 @@ for(p in packages){
 exam <- read_csv("data/Exam_data.csv")
 
 ```
+
+## Working with ggstatsplot
+
+### ANOVA Test
+
+```{r}
+set.seed(1234)
+
+ggbetweenstats(
+  data = exam,
+  x = RACE,
+  y = ENGLISH,
+  type = "bayes"
+)
+
+```
+
+
+
+
+
