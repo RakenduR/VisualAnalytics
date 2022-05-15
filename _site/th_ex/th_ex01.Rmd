@@ -27,7 +27,7 @@ The dataset used is available for download [*here*](https://vast-challenge.githu
 
 # Step by Step Description
 
-Following are the steps taken to undesrtand the demographics of the region.
+Following are the steps taken to understand the demographics of the region.
 
 ## Getting Started
 
