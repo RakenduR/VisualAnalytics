@@ -320,7 +320,7 @@ Education_fin %>%
 
 From the above plot, it can be seen that there is major drop in income of all education segments in the month of March in 2023 compared to 2022. The income of April is comparable between the years and a comparatively higher drop for the month of May. It is also observed that the income drop is highest for Education Levels Graduate and Bachelors.
 
-## Heatmap to understand the Expense pattern of Engagement Ohio over the days of a week
+## Heatmap to understand the Average Expense pattern of Engagement Ohio over the days of a week
 
 
 ```{r fig.width=16, fig.height=8}
@@ -331,13 +331,15 @@ wkday_levels <- c('Saturday', 'Friday',
 
 expense_data <- financial_data %>%
   mutate(date = as.Date(timestamp,"%m/%d/%Y")) %>%
+  mutate(expense = round(abs(ifelse(amount<=0,amount,0)))) %>%
+  filter(expense>0) %>%
   group_by(date)%>%
-  summarise(expense = round(abs(sum(ifelse(amount <= 0,amount,0))),digits=0))%>%
+  summarise(AvgExpense = mean(expense))%>%
   mutate(wkday = factor(weekdays(date),levels = wkday_levels)) %>%
   mutate(wknumber = week(date))
 
 expense_data%>%
-  ggplot(aes(wknumber,wkday,fill=expense))+
+  ggplot(aes(wknumber,wkday,fill=AvgExpense))+
   geom_tile(color = "white", size = 0.1)+
   theme_tufte(base_family = "Helvetica")+
   coord_equal() +
@@ -347,7 +349,7 @@ expense_data%>%
                     labels = comma)+
   labs(x = "Weeks of the Year",
        y = NULL,
-       title = "Expense of Residents") +
+       title = "Average Weekly Expense of Residents") +
   theme(axis.text = element_text(size = 16,margin = margin(r = -60)),
         axis.ticks.y= element_blank(),
         legend.title = element_text(size =16),
@@ -359,21 +361,17 @@ From the above heatmap, it seems that there is a pattern in the days with high s
 
 ```{r}
 
-month_levels <- c('Dec','Nov','Sep','Aug','Jul', 'Jun', 
-                  'May', 'Apr', 
-                  'Mar', 'Feb', 
-                  'Jan')
-
 expense_month_data <- financial_data %>%
   mutate(date = as.Date(timestamp,"%m/%d/%Y")) %>%
-  filter(date < '2023-03-01') %>%
+  mutate(expense = round(abs(ifelse(amount<=0,amount,0)))) %>%
+  filter(expense>0) %>%
   group_by(date)%>%
-  summarise(expense = round(abs(sum(ifelse(amount <= 0,amount,0))),digits=0))%>%
+  summarise(AvgExpense = mean(expense))%>%
   mutate(month = factor(as.yearmon(date))) %>%
   mutate(day = day(date))
 
 expense_month_data%>%
-  ggplot(aes(day,month,fill=expense))+
+  ggplot(aes(day,month,fill=AvgExpense))+
   geom_tile(color = "white", size = 0.1)+
   theme_tufte(base_family = "Helvetica")+
   coord_equal() +
@@ -381,27 +379,24 @@ expense_month_data%>%
                     low = "sky blue", 
                     high = "dark blue",
                     labels = comma)+
-  labs(x = NULL, 
+  labs(x = "Days of the Month", 
      y = NULL, 
-     title = "Expense of Residents") +
+     title = "Average Daily Expense of Residents") +
   theme(axis.text = element_text(size = 9,margin = margin(r = -60)),
         axis.ticks.y= element_blank(),
         legend.title = element_text(size =16),
         legend.text = element_text(size = 16))
 ```
-From the above heatmap, it is seen that the expense is much higher on the 1st day of every month. This stops us seeing any pattern in the rest of the data. Let us try to see the pattern by removing the first day of the month
+From the above heatmap, it is seen that the average expense of residents is much higher on the 1st day of every month. This stops us seeing any pattern in the rest of the data. Let us try to see the pattern by removing the first day of the month
 
 ```{r}
 
-month_levels <- c('Dec','Nov','Sep','Aug','Jul', 'Jun', 
-                  'May', 'Apr', 
-                  'Mar', 'Feb', 
-                  'Jan')
-
 expense_part_month_data <- financial_data %>%
   mutate(date = as.Date(timestamp,"%m/%d/%Y")) %>%
+  mutate(expense = round(abs(ifelse(amount<=0,amount,0)))) %>%
+  filter(expense>0) %>%
   group_by(date)%>%
-  summarise(expense = round(abs(sum(ifelse(amount <= 0,amount,0))),digits=0))%>%
+  summarise(AvgExpense = mean(expense))%>%
   mutate(month = factor(as.yearmon(date))) %>%
   mutate(day = day(date))%>%
   filter(day > 1)
@@ -409,7 +404,7 @@ expense_part_month_data <- financial_data %>%
 expense_part_month_data$tooltip <- weekdays(expense_part_month_data$date)
 
 p3 <- expense_part_month_data%>%
-  ggplot(aes(day,month,fill=expense))+
+  ggplot(aes(day,month,fill=AvgExpense))+
   geom_tile_interactive(aes(tooltip = tooltip),color = "white", size = 0.1)+
   theme_tufte(base_family = "Helvetica")+
   coord_equal() +
@@ -419,7 +414,7 @@ p3 <- expense_part_month_data%>%
                     labels = comma)+
   labs(x = "Day of the month", 
      y = NULL, 
-     title = "Expense of Residents") +
+     title = "Average Daily Expense of Residents") +
   theme(axis.text = element_text(size = 12,margin = margin(r = -60)),
         axis.ticks.y= element_blank(),
         legend.title = element_text(size =16),
