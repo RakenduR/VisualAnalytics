@@ -36,7 +36,7 @@ The dataset used is available for download [*here*](https://vast-challenge.githu
 We will first load the required packages using the below code chunk
 
 ```{r}
-packages = c('tidyverse','ggdist','gghalves','ggthemes','hrbrthemes','ggridges','patchwork','zoo', 'ggrepel','ggiraph','lubridate','gganimate')
+packages = c('tidyverse','ggdist','gghalves','ggthemes','hrbrthemes','ggridges','patchwork','zoo', 'ggrepel','ggiraph','lubridate','gganimate','scales')
 for(p in packages){
   if(!require(p, character.only = T)){
     install.packages(p)
@@ -63,7 +63,7 @@ In the below code chunk, financial data of participants are grouped by Month and
 ```{r}
 level_order <- c('Graduate','Bachelors','HighSchoolOrCollege','Low')
 
-participant_fin <- financial_data %>%
+  participant_fin <- financial_data %>%
   mutate(date = as.yearmon(timestamp)) %>%
   group_by(participantId, date) %>%
   summarise(income = sum(ifelse(amount > 0,amount,0)), expense = sum(ifelse(amount <= 0,amount,0))) %>%
@@ -320,15 +320,141 @@ Education_fin %>%
 
 From the above plot, it can be seen that there is major drop in income of all education segments in the month of March in 2023 compared to 2022. The income of April is comparable between the years and a comparatively higher drop for the month of May. It is also observed that the income drop is highest for Education Levels Graduate and Bachelors.
 
+## Heatmap to understand the Expense pattern of Engagement Ohio over the days of a week
+
+
+```{r fig.width=16, fig.height=8}
+wkday_levels <- c('Saturday', 'Friday', 
+                  'Thursday', 'Wednesday', 
+                  'Tuesday', 'Monday', 
+                  'Sunday')
+
+expense_data <- financial_data %>%
+  mutate(date = as.Date(timestamp,"%m/%d/%Y")) %>%
+  group_by(date)%>%
+  summarise(expense = round(abs(sum(ifelse(amount <= 0,amount,0))),digits=0))%>%
+  mutate(wkday = factor(weekdays(date),levels = wkday_levels)) %>%
+  mutate(wknumber = week(date))
+
+expense_data%>%
+  ggplot(aes(wknumber,wkday,fill=expense))+
+  geom_tile(color = "white", size = 0.1)+
+  theme_tufte(base_family = "Helvetica")+
+  coord_equal() +
+  scale_fill_gradient(name = "Expense",
+                    low = "sky blue", 
+                    high = "dark blue",
+                    labels = comma)+
+  labs(x = "Weeks of the Year",
+       y = NULL,
+       title = "Expense of Residents") +
+  theme(axis.text = element_text(size = 16,margin = margin(r = -60)),
+        axis.ticks.y= element_blank(),
+        legend.title = element_text(size =16),
+        legend.text = element_text(size = 16),
+        axis.title.x = element_text(size=14))
+
+```
+From the above heatmap, it seems that there is a pattern in the days with high spending by the residents of the city. But it is not evident when split by weekdays. Let us see if the high expense is on a particular day of the month.
+
+```{r}
+
+month_levels <- c('Dec','Nov','Sep','Aug','Jul', 'Jun', 
+                  'May', 'Apr', 
+                  'Mar', 'Feb', 
+                  'Jan')
+
+expense_month_data <- financial_data %>%
+  mutate(date = as.Date(timestamp,"%m/%d/%Y")) %>%
+  filter(date < '2023-03-01') %>%
+  group_by(date)%>%
+  summarise(expense = round(abs(sum(ifelse(amount <= 0,amount,0))),digits=0))%>%
+  mutate(month = factor(as.yearmon(date))) %>%
+  mutate(day = day(date))
+
+expense_month_data%>%
+  ggplot(aes(day,month,fill=expense))+
+  geom_tile(color = "white", size = 0.1)+
+  theme_tufte(base_family = "Helvetica")+
+  coord_equal() +
+  scale_fill_gradient(name = "Expense",
+                    low = "sky blue", 
+                    high = "dark blue",
+                    labels = comma)+
+  labs(x = NULL, 
+     y = NULL, 
+     title = "Expense of Residents") +
+  theme(axis.text = element_text(size = 9,margin = margin(r = -60)),
+        axis.ticks.y= element_blank(),
+        legend.title = element_text(size =16),
+        legend.text = element_text(size = 16))
+```
+From the above heatmap, it is seen that the expense is much higher on the 1st day of every month. This stops us seeing any pattern in the rest of the data. Let us try to see the pattern by removing the first day of the month
+
+```{r}
+
+month_levels <- c('Dec','Nov','Sep','Aug','Jul', 'Jun', 
+                  'May', 'Apr', 
+                  'Mar', 'Feb', 
+                  'Jan')
+
+expense_part_month_data <- financial_data %>%
+  mutate(date = as.Date(timestamp,"%m/%d/%Y")) %>%
+  group_by(date)%>%
+  summarise(expense = round(abs(sum(ifelse(amount <= 0,amount,0))),digits=0))%>%
+  mutate(month = factor(as.yearmon(date))) %>%
+  mutate(day = day(date))%>%
+  filter(day > 1)
+
+expense_part_month_data$tooltip <- weekdays(expense_part_month_data$date)
+
+p3 <- expense_part_month_data%>%
+  ggplot(aes(day,month,fill=expense))+
+  geom_tile_interactive(aes(tooltip = tooltip),color = "white", size = 0.1)+
+  theme_tufte(base_family = "Helvetica")+
+  coord_equal() +
+  scale_fill_gradient(name = "Expense",
+                    low = "sky blue", 
+                    high = "dark blue",
+                    labels = comma)+
+  labs(x = "Day of the month", 
+     y = NULL, 
+     title = "Expense of Residents") +
+  theme(axis.text = element_text(size = 12,margin = margin(r = -60)),
+        axis.ticks.y= element_blank(),
+        legend.title = element_text(size =16),
+        legend.text = element_text(size = 16),
+        plot.title = element_text(size =18),
+        axis.title.x = element_text(size = 14))
+
+girafe(
+  ggobj = p3,
+  width_svg = 12,
+  height_svg = 12*0.618
+)
+
+```
+Once we removed the first day of the month, which has the highest expenditure, now we can see a pattern where the expense is higher on 2 consecutive days. From the tooltips, it can be seen that the residents spend more on saturdays and sundays.
+
+
+
 ## Conclusion
 From the above plots, we can infer the following about the financial health of the residents of Engagement, Ohio, USA.
 
 
-* Financial health of the occupants have deteriorated between 2022 and 2023
+* Overall Financial health of the occupants have deteriorated between 2022 and 2023. The dip is greater for residents with Bachelors and Graduate education.
 
 * There is a major dip in Income in April, 2022 and Feb, 2023 where as the income is high in March,2022, Aug,2022 and March 2023
 
 * Expenses of the residents have been stable during the time period of the data
 
 * People with higher education has higher savings
+
+* Residents have high expense on the first day of every month. This could be studied further to understand if these are utility bills.
+
+* Residents spend more on weekends. This could be studied further to see if these are leisure spending and what are the popular leisure activities of the city
+
+
+
+
 
