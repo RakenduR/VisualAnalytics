@@ -36,7 +36,7 @@ The dataset used is available for download [*here*](https://vast-challenge.githu
 We will first load the required packages using the below code chunk
 
 ```{r}
-packages = c('tidyverse','ggdist','gghalves','ggthemes','hrbrthemes','ggridges','patchwork','zoo', 'ggrepel','ggiraph','lubridate')
+packages = c('tidyverse','ggdist','gghalves','ggthemes','hrbrthemes','ggridges','patchwork','zoo', 'ggrepel','ggiraph','lubridate','gganimate')
 for(p in packages){
   if(!require(p, character.only = T)){
     install.packages(p)
@@ -58,7 +58,7 @@ participants_data <- read_csv("data/Participants.csv")
 ```
 ## Data Wrangling
 
-In the below code chunk, financial data of participants are grouped by Month and Aggregated to find their monthly Income and Expenses. The data is then joined with Participants data so that we have information about participants education level and other details.
+In the below code chunk, financial data of participants are grouped by Month and Aggregated to find their monthly Income and Expenses. We will also calcualte the savings of the participants. The data is then joined with Participants data so that we have information about participants education level and other details.
 
 ```{r}
 level_order <- c('Graduate','Bachelors','HighSchoolOrCollege','Low')
@@ -67,6 +67,7 @@ participant_fin <- financial_data %>%
   mutate(date = as.yearmon(timestamp)) %>%
   group_by(participantId, date) %>%
   summarise(income = sum(ifelse(amount > 0,amount,0)), expense = sum(ifelse(amount <= 0,amount,0))) %>%
+  mutate(savings = round(income + expense,digits = 0)) %>%
   inner_join(participants_data, by =c('participantId'))%>%
   mutate(educationLevel = factor(educationLevel, levels = level_order))
 
@@ -82,6 +83,7 @@ Education_fin <- participant_fin %>%
   summarise(income = mean(income), expense= mean(expense))
   
 ```
+
 
 ## Visualising the Income of Participants to understand if the Education Level has any impact
 <span style="color: blue;"></span>
@@ -112,6 +114,9 @@ participant_fin %>%
   ggtitle("Income of Participants by Education Level")
 
 ```
+
+## Making the Line Graph interactive by adding Tooltip
+
 Since there are too many lines, let us add a tooltip to display the income and education level on hover
 
 ```{r fig.width=20, fig.height=8}
@@ -122,7 +127,7 @@ participant_fin$tooltip <- c(paste0(
 
 p1 <- participant_fin %>%
   ggplot(aes(x=date, y = income, group =participantId, color =educationLevel))+
-  geom_line_interactive(aes(tooltip = tooltip),size =0.3)+
+  geom_line_interactive(aes(tooltip = tooltip),size =0.4)+
   ylab("Income")+
   xlab("Month, Year")+
   theme(panel.grid.minor.y = element_blank(),
@@ -130,18 +135,25 @@ p1 <- participant_fin %>%
         panel.grid.major.x = element_line(colour = "grey90"),
         panel.grid.major.y = element_line(colour = "grey90"),
         panel.background = element_rect(fill = "white"),
-        axis.text.x = element_text( angle = 45, margin = margin(t = 30)),
-                axis.line = element_line(color="grey25", size = 0.02))+
+        axis.text.x = element_text(size =16, angle = 45, margin = margin(t = 30,r=30)),
+        axis.text.y = element_text(size =16),
+        axis.line = element_line(color="grey25", size = 0.2),
+        axis.title = element_text(size=16),
+        legend.title = element_text(size =16),
+        legend.text = element_text(size = 16),
+        plot.title = element_text(size =20,hjust = 0.5))+
   ggtitle("Income of Participants by Education Level")
 
 girafe(
   ggobj = p1,
-  width_svg = 6,
-  height_svg = 6*0.618
+  width_svg = 12,
+  height_svg = 12*0.618
 )
 ```
 
- Let us clean up this graph to see the average Income by Education Level 
+## Comparing the average income of different education groups
+
+Let us clean up this graph to see the average Income by Education Level 
 
 
 
@@ -170,6 +182,7 @@ Education_fin %>%
 
 ```
 
+## Comparing the income and expense of different Education Levels
 
 Let us now try to visualize both income and expense of different Education Levels on the same graph
 
@@ -184,7 +197,7 @@ Education_fin %>%
   scale_y_continuous(name = "Income",
                      sec.axis = sec_axis(trans = ~.,name="Expense"))+
   xlab("Month, Year")+
-    theme(
+  theme(axis.title.y=element_text(angle =0),
         axis.title.x=element_text(margin = margin(t=-10)),
         panel.grid.minor.y = element_blank(),
         panel.grid.minor.x = element_line(colour = "grey90"),
@@ -201,9 +214,77 @@ Education_fin %>%
   ggtitle("Average Income and Expense by Education Level")
 ```
 
+One challenge faced for this graph is to add a second legend while using dual y axis. Also, the x axis tick labels does not show all the levels.
+
+## Using Scatterplot to compare the Income and Expense in April, 2022
+
+From the above plot, we can see that the expenses(dotted lines) are more or less same for different education levels and there is not much variation. This means that the savings will be proportional to the income and we will analyse this using scatterplot which is a better choice for continuous data. 
+
+For this we will add a column for savings to the dataset which is the difference between the income and expense.
+
+```{r  fig.width=24, fig.height=8}
 
 
-From the above plot, we can see that the expenses are more or less same for different education levels and there is not much variation. This means that the savings will be proportional to the income and we will analyse this further down the line. Now we will continue to analyse the monthly income variations of different education levels using cyclic graph.
+
+participant_fin$tooltip <- c(paste0(
+  "Id = ", participant_fin$participantId,
+  "\n Savings = $",participant_fin$savings))
+
+p2 <- participant_fin %>%
+  filter(date == 'Apr 2022') %>%
+  ggplot(aes(x=income, y = abs(expense), size = savings, color = educationLevel))+
+  geom_point_interactive(aes(tooltip = tooltip), alpha=0.7) +
+  ggtitle("Income vs Expense by different Education Levels") +
+  ylab("Expense") +
+  xlab("Income")+
+  theme_minimal() +
+  theme(axis.line = element_line(size = 0.5),
+        axis.text = element_text(size = 16),
+        axis.title = element_text(size=16),
+        axis.title.y = element_text(angle = 0),
+        legend.title = element_text(size =16),
+        legend.text = element_text(size = 16),
+        plot.title = element_text(size =20,hjust = 0.5))
+
+girafe(
+  ggobj = p2,
+  width_svg = 16,
+  height_svg = 16*0.618
+)
+
+```
+## Observing the variation in the Income and Expense of the participants over the time period
+
+```{r  fig.width=24, fig.height=8}
+
+
+
+participant_fin %>%
+  filter(date >= 'Apr 2022') %>%
+  transform(date = as.Date(date, frac = 1)) %>%
+  ggplot(aes(x=income, y = abs(expense), size = savings, color = educationLevel))+
+  geom_point(alpha=0.7) +
+  ggtitle("Income vs Expense by different Education Levels") +
+  ylab("Expense") +
+  xlab("Income")+
+  theme_minimal() +
+  theme(axis.line = element_line(size = 0.5),
+        axis.text = element_text(size = 16),
+        axis.title = element_text(size=16),
+        axis.title.y = element_text(angle = 0),
+        legend.title = element_text(size =16),
+        legend.text = element_text(size = 16),
+        plot.title = element_text(size =20,hjust = 0.5))+
+  labs(title ='Period : {frame_time}')+
+  transition_time(date)+
+  ease_aes('linear')
+
+
+```
+
+## Understanding the income variation between 2022 and 2023 using Cyclic plots
+
+We have the income details of the participants for March, April and May for both the years 2022 and 2023. Let us analyse the monthly income variations of different education levels using cyclic graph.
 
 ```{r fig.width=16, fig.height=8}
 Education_fin$month <- factor(month(Education_fin$date), 
