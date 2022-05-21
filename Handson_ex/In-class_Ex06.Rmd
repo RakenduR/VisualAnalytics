@@ -1,0 +1,34 @@
+---
+title: "In-Class Exercise 06"
+description: |
+  Lesson 7: GeoVA-Geographic Data Visualisation and Analysis
+author:
+  - name: Rakendu 
+    url: https://www.linkedin.com/in/rakendu-ramesh/
+    affiliation: Singapore Management University
+    affiliation_url: https://scis.smu.edu.sg/
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+
+
+* Assuming the volunteers are representative of the city’s population, characterize the distinct areas of the city that you identify. For each area you identify, provide your rationale and supporting data.
+
+
+* Where are the busiest areas in Engagement? Are there traffic bottlenecks that should be addressed? Explain your rationale.
+
+
+
+
+
+
+
+
