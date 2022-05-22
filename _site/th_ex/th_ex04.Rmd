@@ -28,7 +28,7 @@ We will first load the required packages using the below code chunk
  
 
 ```{r}
-packages = c('tidyverse','ViSiElse','lubridate')
+packages = c('tidyverse','ViSiElse','lubridate','ggplot2','ggthemes','hrbrthemes','scales','ggdist','gghalves')
 for(p in packages){
   if(!require(p, character.only = T)){
     install.packages(p)
@@ -48,16 +48,37 @@ partsample1 <- read_csv("data/ParticipantStatusLogs1.csv")
 
 ```
 
+```{r}
+participants_data <- read_csv("data/Participants.csv")
+```
+
 
 
 ```{r echo=FALSE, eval=FALSE}
 
-March_3rd_pattern <- partsample1 %>%
-  filter(timestamp >= ymd_hms('2022-03-03 00:00:00') , timestamp < ymd_hms('2022-03-04 00:00:00'), participantId == 0 ) %>%
-  select(timestamp, currentMode, hungerStatus, sleepStatus)
-  
+partsample1 <- partsample1 %>%
+  filter((timestamp >= ymd_hms('2022-03-03 00:00:00') & timestamp < ymd_hms('2022-03-04 00:00:00'))& (participantId == 0 | participantId == 173 )) %>%
+  select(timestamp,participantId, currentMode, hungerStatus, sleepStatus)
+```  
 
-March_3rd_pattern$eatStatus <- rep('not eat', length(March_3rd_pattern$timestamp))
+
+
+```{r echo=FALSE, eval=FALSE}
+write_rds(partsample1, "data/rds/partsample1.rds")
+
+```
+
+```{r}
+
+partsample1 <- read_rds("data/rds/partsample1.rds")
+
+```
+
+
+```{r}
+March_3rd_pattern <- partsample1 %>%
+  filter(participantId==0)
+March_3rd_pattern$eatStatus <- rep(0, length(March_3rd_pattern$timestamp))
 
 March_3rd_pattern$eatStatus[March_3rd_pattern$currentMode == 'AtRestaurant'] <- 'eat'
 
@@ -68,67 +89,68 @@ March_3rd_pattern <- March_3rd_pattern %>%
   mutate(eatStatus = ifelse(lag(hungerStatus) != 'JustAte' & hungerStatus =='JustAte' & lag(eatStatus) != "eat","eat",eatStatus))
 ```
 
+```{r}
 
 
+part0Details <- participants_data %>%
+  filter(participantId == 0)
 
-```{r echo=FALSE, eval=FALSE}
-
-A <- rle(March_3rd_pattern$currentMode)
-
-currentModeTimes <- March_3rd_pattern %>%
-  select(timestamp,currentMode) %>%
-  mutate(row = rep(seq_along(A$lengths),A$lengths)) %>%
-  group_by(row,currentMode) %>%
-  summarise(min(timestamp), .groups = 'rowwise')
-
-names(currentModeTimes)[names(currentModeTimes) == 'currentMode'] <- 'Activity'
-
-```
-
-```{r echo=FALSE, eval=FALSE}
-
-B <- rle(March_3rd_pattern$sleepStatus)
-
-sleepTimes <- March_3rd_pattern %>%
-  select(timestamp,sleepStatus) %>%
-  mutate(row = rep(seq_along(B$lengths),B$lengths)) %>%
-  group_by(row,sleepStatus) %>%
-  summarise(min(timestamp), .groups = 'rowwise')
-
-names(sleepTimes)[names(sleepTimes) == 'sleepStatus'] <- 'Activity'
-
-```
-
-```{r echo=FALSE, eval=FALSE}
-
-C <- rle(March_3rd_pattern$eatStatus)
-
-eatTimes <- March_3rd_pattern %>%
-  select(timestamp,eatStatus) %>%
-  mutate(row = rep(seq_along(C$lengths),C$lengths)) %>%
-  group_by(row,eatStatus) %>%
-  summarise(min(timestamp), .groups = 'rowwise')
-
-
-names(eatTimes)[names(eatTimes) == 'eatStatus'] <- 'Activity'
-
-```
-
-```{r echo=FALSE, eval=FALSE}
-
-Participant001ActivityTable <- bind_rows(currentModeTimes, sleepTimes,eatTimes)
-
-Participant001ActivityTable$activityStartSec <- difftime(Participant001ActivityTable$`min(timestamp)`,as.POSIXct(ymd_hms('2022-03-03 00:00:00'),units = "secs"))
+part1Details <- participants_data %>%
+  filter(participantId <= 173)
 ```
 
 
-  
+```{r}
+March_3rd_pattern <- March_3rd_pattern %>%
+  mutate(travel = ifelse(March_3rd_pattern$currentMode == 'Transport','Transport',0)) %>%
+  mutate(work = ifelse(March_3rd_pattern$currentMode == 'AtWork', 'Work',0)) %>%
+  mutate(recreation = ifelse(March_3rd_pattern$currentMode == 'AtRecreation','Recreation',0))
 
-```{r echo=FALSE, eval=FALSE}
-Part000_Final <- Participant001ActivityTable %>%
-  ungroup() %>%
-  select(Activity,activityStartSec) %>%
-  pivot_wider(names_from = "Activity", values_from = "activityStartSec")
+March_3rd_pattern$sleepStatus[March_3rd_pattern$sleepStatus != 'Sleeping'] <- 0
+March_3rd_pattern$currentMode[March_3rd_pattern$currentMode != 'AtHome'] <- 0
+
+names(March_3rd_pattern)[names(March_3rd_pattern) == 'currentMode'] <- 'AtHome'
+```
+
+```{r}
+
+
+March_3rd_pattern <- March_3rd_pattern %>%
+  select(timestamp,AtHome,sleepStatus,eatStatus, travel,work,recreation)
 
 ```
 
+
+```{r}
+Activity_Levels <- c('recreation','work','travel','eatStatus','sleepStatus','AtHome')
+Status_Levels <- c(0,1)
+
+LongTable <- March_3rd_pattern %>%
+pivot_longer(!timestamp, names_to = "Activity",values_to = "Status")
+
+LongTable <- LongTable %>%
+  mutate(Status = ifelse(LongTable$Status != 0 , 1, 0)) %>%
+  mutate(Activity = factor(LongTable$Activity, levels = Activity_Levels)) %>%
+  mutate(Status = factor(LongTable$Status, levels = Status_Levels))
+
+```
+
+
+
+```{r fig.width= 16, fig.height= 8}
+LongTable %>%
+ggplot(aes(timestamp, Activity, fill = as.factor(Status)))+
+  geom_tile(color = "white")+
+  theme_ipsum()+
+  theme_tufte(base_family = "Helvetica")+
+  scale_fill_manual(values =  c("white","skyblue"))+
+  scale_x_datetime(date_labels = "%H:%M") +
+  xlab("")+
+  ylab("")+
+  theme(legend.position = "none",
+        axis.text = element_text(size = 14),
+        axis.ticks = element_blank())+
+  ggtitle("Daily Routine of Participant 1")
+
+
+```
