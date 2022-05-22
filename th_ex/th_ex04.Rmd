@@ -1,0 +1,134 @@
+---
+title: "Take Home Exercise 04"
+description: |
+  A Study on the Financial health of the residents of Engagement, Ohio, USA.
+author:
+  - name: Rakendu Ramesh 
+    url: https://www.linkedin.com/in/rakendu-ramesh/
+    affiliation: Singapore Management University
+    affiliation_url: https://www.linkedin.com/showcase/smumitb/
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+# Overview
+
+In this Take Home exercise, we will be studying the daily routines of 2 participants. We will analyse the similarities as well as the differences between 2 particiapnts and their daily patterns. We will also analyse the patterns over different days of the week as well as over the available period, to understand the variation in patterns on weekends and possibly, vacations.
+
+## Getting Started
+
+We will first load the required packages using the below code chunk
+ 
+
+```{r}
+packages = c('tidyverse','ViSiElse','lubridate')
+for(p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p, character.only = T)
+}
+
+```
+
+
+## Importing the dataset
+
+
+```{r echo=FALSE, eval=FALSE}
+
+partsample1 <- read_csv("data/ParticipantStatusLogs1.csv")
+
+```
+
+
+
+```{r echo=FALSE, eval=FALSE}
+
+March_3rd_pattern <- partsample1 %>%
+  filter(timestamp >= ymd_hms('2022-03-03 00:00:00') , timestamp < ymd_hms('2022-03-04 00:00:00'), participantId == 0 ) %>%
+  select(timestamp, currentMode, hungerStatus, sleepStatus)
+  
+
+March_3rd_pattern$eatStatus <- rep('not eat', length(March_3rd_pattern$timestamp))
+
+March_3rd_pattern$eatStatus[March_3rd_pattern$currentMode == 'AtRestaurant'] <- 'eat'
+
+
+March_3rd_pattern <- March_3rd_pattern[order(as.POSIXct(March_3rd_pattern$timestamp)),]
+
+March_3rd_pattern <- March_3rd_pattern %>%
+  mutate(eatStatus = ifelse(lag(hungerStatus) != 'JustAte' & hungerStatus =='JustAte' & lag(eatStatus) != "eat","eat",eatStatus))
+```
+
+
+
+
+```{r echo=FALSE, eval=FALSE}
+
+A <- rle(March_3rd_pattern$currentMode)
+
+currentModeTimes <- March_3rd_pattern %>%
+  select(timestamp,currentMode) %>%
+  mutate(row = rep(seq_along(A$lengths),A$lengths)) %>%
+  group_by(row,currentMode) %>%
+  summarise(min(timestamp), .groups = 'rowwise')
+
+names(currentModeTimes)[names(currentModeTimes) == 'currentMode'] <- 'Activity'
+
+```
+
+```{r echo=FALSE, eval=FALSE}
+
+B <- rle(March_3rd_pattern$sleepStatus)
+
+sleepTimes <- March_3rd_pattern %>%
+  select(timestamp,sleepStatus) %>%
+  mutate(row = rep(seq_along(B$lengths),B$lengths)) %>%
+  group_by(row,sleepStatus) %>%
+  summarise(min(timestamp), .groups = 'rowwise')
+
+names(sleepTimes)[names(sleepTimes) == 'sleepStatus'] <- 'Activity'
+
+```
+
+```{r echo=FALSE, eval=FALSE}
+
+C <- rle(March_3rd_pattern$eatStatus)
+
+eatTimes <- March_3rd_pattern %>%
+  select(timestamp,eatStatus) %>%
+  mutate(row = rep(seq_along(C$lengths),C$lengths)) %>%
+  group_by(row,eatStatus) %>%
+  summarise(min(timestamp), .groups = 'rowwise')
+
+
+names(eatTimes)[names(eatTimes) == 'eatStatus'] <- 'Activity'
+
+```
+
+```{r echo=FALSE, eval=FALSE}
+
+Participant001ActivityTable <- bind_rows(currentModeTimes, sleepTimes,eatTimes)
+
+Participant001ActivityTable$activityStartSec <- difftime(Participant001ActivityTable$`min(timestamp)`,as.POSIXct(ymd_hms('2022-03-03 00:00:00'),units = "secs"))
+```
+
+
+  
+
+```{r echo=FALSE, eval=FALSE}
+Part000_Final <- Participant001ActivityTable %>%
+  ungroup() %>%
+  select(Activity,activityStartSec) %>%
+  pivot_wider(names_from = "Activity", values_from = "activityStartSec")
+
+```
+
