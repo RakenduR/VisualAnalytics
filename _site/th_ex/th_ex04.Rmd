@@ -1,7 +1,7 @@
 ---
 title: "Take Home Exercise 04"
 description: |
-  A Study on the Financial health of the residents of Engagement, Ohio, USA.
+  Comparison of daily routines of 2 selected particpants from Engagement, Ohio, USA. 
 author:
   - name: Rakendu Ramesh 
     url: https://www.linkedin.com/in/rakendu-ramesh/
@@ -172,7 +172,7 @@ print.data.frame(participantDetails)
 
 * John goes to bed early where as Bob is a late sleeper. The fact that John is 36 and Bob is 19 could be the reason.
 
-* John travels a longer distance to sleep. Bob evidently stays closer to his work place and hence gets to sleep a little longer.
+* John travels a longer distance to work. Bob evidently stays closer to his work place and hence gets to sleep a little longer.
 
 * Bob spends a long stretch at work in the morning, he goes for his lunch a little later compared to John.
 
