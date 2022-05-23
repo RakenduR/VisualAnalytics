@@ -1,0 +1,96 @@
+---
+title: "In-Class Exercise 07"
+description: |
+  Lesson 7: Modelling, Visualising and Analysing Network Data with R
+author:
+  - name: Rakendu 
+    url: https://www.linkedin.com/in/rakendu-ramesh/
+    affiliation: Singapore Management University
+    affiliation_url: https://scis.smu.edu.sg/
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE,
+                      fig.retina = 3)
+```
+
+## Setting up
+
+```{r}
+packages = c('tidyverse', 'tidygraph', 'ggraph','visNetwork','lubridate','clock')
+
+for(p in packages){
+  if(!require(p,character.only = TRUE)){
+    install.packages(p)
+  }
+  library(p, character.only = TRUE)
+}
+```
+
+# Importing the data
+
+```{r}
+GAStech_nodes <- read_csv("data/GAStech_email_node.csv")
+
+GAStech_edges <- read_csv("data/GAStech_email_edge-v2.csv")
+
+
+```
+
+# Data Wrangling
+
+```{r}
+GAStech_edges <- GAStech_edges %>%
+  mutate(SentDate = dmy(SentDate)) %>%
+  mutate(Weekday = wday(SentDate,
+         label =TRUE,
+         abbr = FALSE)) 
+
+```
+
+### Wrangling Attribute
+
+Select all the records where the main subject is Work related. Then group by source, Target and weekday and cound the number of records and create a new column called Weight. We also filter by records where source is not same as target. and alsofilter by Weight >1
+
+```{r}
+GAStech_edges_aggregated <- GAStech_edges %>%
+  filter(MainSubject == "Work related") %>%
+  group_by(source,target,Weekday) %>%
+  summarise(Weight =n()) %>%
+  filter(source != target) %>%
+  filter(Weight > 1) %>%
+  ungroup
+
+```
+## Building graph model
+
+Note that the there cannot be nodes without edges between them. It is nt possible to build the graph in that case.
+
+```{r}
+gastech_graph <- tbl_graph(nodes = GAStech_nodes,
+                           edges = GAStech_edges_aggregated,
+                           directed = TRUE)
+
+gastech_graph
+```
+
+```{r}
+set.seed(1234)
+
+ggraph(gastech_graph,
+       layout = "fr")+
+  geom_edge_link()+
+  geom_node_point() +
+  theme_graph()
+
+
+```
+fr is force directed layout and will keep on changing. Hence important to set.seed so that the layout doesnt change. When the fr generate the layout, it will use gravitational force and push force.
+Where as for stress(default) layout, the layout will be same without set.seed.
+
+
