@@ -52,6 +52,7 @@ partsample1 <- read_csv("data/ParticipantStatusLogs1.csv")
 participants_data <- read_csv("data/Participants.csv")
 ```
 
+We will select the data related to the Particiapants that we are interested in and save it as an rds file so that we do not need to deal with large unnecessary data anymore
 
 
 ```{r echo=FALSE, eval=FALSE}
@@ -62,7 +63,7 @@ March_3rd_pattern <- partsample1 %>%
 ```  
 
 ```{r echo=FALSE, eval=FALSE}
-write_rds(partsample1, "data/rds/partsample1.rds")
+write_rds(March_3rd_pattern, "data/rds/partsample1.rds")
 
 ```
 
@@ -72,7 +73,12 @@ March_3rd_pattern <- read_rds("data/rds/partsample1.rds")
 
 ```
 
+## Data Wrangling
 
+To visualize the daily routine of our selected participants, the data need to extensively manipulated. Lets get to it!
+
+In the below code chunk, we create a new column to indicate when the participant is eating. This is based on when the hungerStatus changes to 'Just Ate'.
+We will also consider that the participant is eating all the time when he is at a restaurant.
 
 
 ```{r}
@@ -91,10 +97,9 @@ March_3rd_pattern <- March_3rd_pattern %>%
 ```
 
 
+We will  create new columns to indicate when he is travelling, when he is at work, when he is at some recreation activity, when heis at home and when he is sleeping. So these are the basic activities that we will track to understand his routine.
 
-
-
-
+We will then pivot the table to have activity as one column and a status column to indicate if the corresponding activity is 'ON' or 'OFF'.
 
 ```{r}
 March_3rd_pattern <- March_3rd_pattern %>%
@@ -105,26 +110,14 @@ March_3rd_pattern <- March_3rd_pattern %>%
   mutate(sleep = ifelse(March_3rd_pattern$sleepStatus == 'Sleeping',1,0))
 
 
-```
-
-```{r}
-
-
 March_3rd_pattern <- March_3rd_pattern %>%
   select(timestamp,participantId,athome,sleep,eat, travel,work,recreation)
-
-```
-
-
-```{r}
 
 
 LongTable <- March_3rd_pattern %>%
 pivot_longer(cols = c(athome,sleep,eat,travel,work,recreation), names_to = "Activity",values_to = "Status")
 
-```
 
-```{r}
 Activity_Levels <- c('recreation','work','travel','eat','sleep','athome')
 Status_Levels <- c(0,1)
 
@@ -136,7 +129,9 @@ LongTable <- LongTable %>%
 ```
 
 
+## Visualising the Daily Routine of the participants
 
+We will visualize the daily activities using geom tile for the 2 participants.
 
 ```{r fig.width= 16, fig.height= 8}
 LongTable %>%
@@ -158,10 +153,29 @@ ggplot(aes(timestamp, Activity, fill = as.factor(Status)))+
 
 ```
 
-```{r fig.width= 20}
+## Inference
+
+We notice that there is major difference in the routines of the 2 participants. Let us take a look at the details of each participants to understand these differences.
+
+For ease of discussion, let us call them John and Bob.
+
+
+```{r fig.width= 30}
 
 participantDetails <- participants_data%>%
-  filter(participantId == 0 | participantId == 173)
+  filter(participantId == 0 | participantId == 173) %>%
+  mutate(name = c('John','Bob'))
 
 print.data.frame(participantDetails)
 ```
+
+
+* John goes to bed early where as Bob is a late sleeper. The fact that John is 36 and Bob is 19 could be the reason.
+
+* John travels a longer distance to sleep. Bob evidently stays closer to his work place and hence gets to sleep a little longer.
+
+* Bob spends a long stretch at work in the morning, he goes for his lunch a little later compared to John.
+
+* Bob spends a fairly larger time on recreational activities in the evening than John.
+
+* John seems to be more health conscious, having only 2 meals a day. Bob has a late night munch, probably hungry after his recreational activities.
