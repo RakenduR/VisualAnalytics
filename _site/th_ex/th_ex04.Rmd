@@ -56,12 +56,10 @@ participants_data <- read_csv("data/Participants.csv")
 
 ```{r echo=FALSE, eval=FALSE}
 
-partsample1 <- partsample1 %>%
+March_3rd_pattern <- partsample1 %>%
   filter((timestamp >= ymd_hms('2022-03-03 00:00:00') & timestamp < ymd_hms('2022-03-04 00:00:00'))& (participantId == 0 | participantId == 173 )) %>%
   select(timestamp,participantId, currentMode, hungerStatus, sleepStatus)
 ```  
-
-
 
 ```{r echo=FALSE, eval=FALSE}
 write_rds(partsample1, "data/rds/partsample1.rds")
@@ -70,70 +68,73 @@ write_rds(partsample1, "data/rds/partsample1.rds")
 
 ```{r}
 
-partsample1 <- read_rds("data/rds/partsample1.rds")
+March_3rd_pattern <- read_rds("data/rds/partsample1.rds")
 
 ```
 
 
-```{r}
-March_3rd_pattern <- partsample1 %>%
-  filter(participantId==0)
-March_3rd_pattern$eatStatus <- rep(0, length(March_3rd_pattern$timestamp))
 
-March_3rd_pattern$eatStatus[March_3rd_pattern$currentMode == 'AtRestaurant'] <- 'eat'
+
+```{r}
+
+March_3rd_pattern$eat <- rep(0, length(March_3rd_pattern$timestamp))
+
+March_3rd_pattern$eat[March_3rd_pattern$currentMode == 'AtRestaurant'] <- 1
 
 
 March_3rd_pattern <- March_3rd_pattern[order(as.POSIXct(March_3rd_pattern$timestamp)),]
 
 March_3rd_pattern <- March_3rd_pattern %>%
-  mutate(eatStatus = ifelse(lag(hungerStatus) != 'JustAte' & hungerStatus =='JustAte' & lag(eatStatus) != "eat","eat",eatStatus))
+    group_by(participantId) %>%
+  mutate(eat = ifelse(lag(hungerStatus) != 'JustAte' & hungerStatus =='JustAte' & lag(eat) != 1,1,eat))%>%
+  ungroup()
 ```
 
-```{r}
 
 
-part0Details <- participants_data %>%
-  filter(participantId == 0)
 
-part1Details <- participants_data %>%
-  filter(participantId <= 173)
-```
+
 
 
 ```{r}
 March_3rd_pattern <- March_3rd_pattern %>%
-  mutate(travel = ifelse(March_3rd_pattern$currentMode == 'Transport','Transport',0)) %>%
-  mutate(work = ifelse(March_3rd_pattern$currentMode == 'AtWork', 'Work',0)) %>%
-  mutate(recreation = ifelse(March_3rd_pattern$currentMode == 'AtRecreation','Recreation',0))
+  mutate(travel = ifelse(March_3rd_pattern$currentMode == 'Transport',1,0)) %>%
+  mutate(work = ifelse(March_3rd_pattern$currentMode == 'AtWork', 1,0)) %>%
+  mutate(recreation = ifelse(March_3rd_pattern$currentMode == 'AtRecreation',1,0)) %>%
+  mutate(athome = ifelse(March_3rd_pattern$currentMode == 'AtHome',1,0)) %>%
+  mutate(sleep = ifelse(March_3rd_pattern$sleepStatus == 'Sleeping',1,0))
 
-March_3rd_pattern$sleepStatus[March_3rd_pattern$sleepStatus != 'Sleeping'] <- 0
-March_3rd_pattern$currentMode[March_3rd_pattern$currentMode != 'AtHome'] <- 0
 
-names(March_3rd_pattern)[names(March_3rd_pattern) == 'currentMode'] <- 'AtHome'
 ```
 
 ```{r}
 
 
 March_3rd_pattern <- March_3rd_pattern %>%
-  select(timestamp,AtHome,sleepStatus,eatStatus, travel,work,recreation)
+  select(timestamp,participantId,athome,sleep,eat, travel,work,recreation)
 
 ```
 
 
 ```{r}
-Activity_Levels <- c('recreation','work','travel','eatStatus','sleepStatus','AtHome')
-Status_Levels <- c(0,1)
+
 
 LongTable <- March_3rd_pattern %>%
-pivot_longer(!timestamp, names_to = "Activity",values_to = "Status")
+pivot_longer(cols = c(athome,sleep,eat,travel,work,recreation), names_to = "Activity",values_to = "Status")
+
+```
+
+```{r}
+Activity_Levels <- c('recreation','work','travel','eat','sleep','athome')
+Status_Levels <- c(0,1)
 
 LongTable <- LongTable %>%
   mutate(Status = ifelse(LongTable$Status != 0 , 1, 0)) %>%
   mutate(Activity = factor(LongTable$Activity, levels = Activity_Levels)) %>%
   mutate(Status = factor(LongTable$Status, levels = Status_Levels))
-
+         
 ```
+
 
 
 
@@ -141,7 +142,7 @@ LongTable <- LongTable %>%
 LongTable %>%
 ggplot(aes(timestamp, Activity, fill = as.factor(Status)))+
   geom_tile(color = "white")+
-  theme_ipsum()+
+  facet_wrap(~LongTable$participantId, nrow = 2, colors())+
   theme_tufte(base_family = "Helvetica")+
   scale_fill_manual(values =  c("white","skyblue"))+
   scale_x_datetime(date_labels = "%H:%M") +
@@ -149,8 +150,18 @@ ggplot(aes(timestamp, Activity, fill = as.factor(Status)))+
   ylab("")+
   theme(legend.position = "none",
         axis.text = element_text(size = 14),
-        axis.ticks = element_blank())+
-  ggtitle("Daily Routine of Participant 1")
+        axis.ticks = element_blank(),
+        panel.grid.minor.y = element_line(size = 0.5, colour = "grey70")
+        )+
+  ggtitle("Daily Routine of selected Participants")
 
 
+```
+
+```{r fig.width= 20}
+
+participantDetails <- participants_data%>%
+  filter(participantId == 0 | participantId == 173)
+
+print.data.frame(participantDetails)
 ```
