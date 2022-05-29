@@ -1,0 +1,409 @@
+---
+title: "Take Home Exercise 05"
+description: |
+  Visualising and Analysing Geographic and Movement Data 
+author:
+  - name: Rakendu Ramesh 
+    url: https://www.linkedin.com/in/rakendu-ramesh/
+    affiliation: Singapore Management University
+    affiliation_url: https://www.linkedin.com/showcase/smumitb/
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Objective
+
+
+* To identify the distinct areas of the city like residential, corporate and commercial areas.
+
+* To identify the busiest areas of the city ? Are there traffic bottlenecks that should be addressed?
+
+
+## Dataset
+
+To begin with, let us understand the distribution of Residential and Commercial Buildings in Engagement. We will also include schools in the visualisation to see if they reveal any patterns.
+
+For this visualization, we will use the Buildings data set.
+
+
+## Getting Started
+
+We will first load the required packages using the below code chunk
+ 
+
+```{r}
+packages = c('sf','tmap','tidyverse','lubridate','clock','sftime','rmarkdown')
+for(p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p, character.only = T)
+}
+
+```
+
+
+## Importing data
+
+```{r}
+
+buildings <- read_sf("data/Buildings.csv", options = "GEOM_POSSIBLE_NAMES=location")
+
+pubs <- read_sf("data/Pubs.csv", options = "GEOM_POSSIBLE_NAMES=location")
+
+restaurants <- read_sf("data/Restaurants.csv", options = "GEOM_POSSIBLE_NAMES=location")
+
+employers <- read_sf("data/Employers.csv", options = "GEOM_POSSIBLE_NAMES=location")
+
+apartments <- read_sf("data/Apartments.csv", options = "GEOM_POSSIBLE_NAMES=location")
+
+
+
+```
+
+Getting the participant data to understand the traffic bottlenecks
+
+
+```{r echo=FALSE, eval=FALSE}
+logs <- read_sf("data/ParticipantStatusLogs1.csv", 
+                options = "GEOM_POSSIBLE_NAMES=currentLocation")
+```
+
+```{r echo=FALSE, eval=FALSE}
+logs_selected <- logs %>%
+  mutate(Timestamp = date_time_parse(timestamp,
+                                     zone ="",
+                                     format= "%Y-%m-%dT%H:%M:%S")) %>%
+  mutate(day = get_day(Timestamp)) %>%
+  mutate(hour = get_hour(Timestamp)) %>%
+  filter(currentMode =="Transport")
+
+```
+
+
+```{r echo=FALSE, eval=FALSE}
+write_rds(logs_selected, "data/rds/logs_selected.rds")
+
+```
+
+```{r echo= FALSE}
+
+logs_selected <- read_rds("data/rds/logs_selected.rds")
+
+```
+
+## Visualizing the location of Residential and Commercial buildings
+
+```{r  fig.width= 16, fig.height= 10}
+tmap_mode("plot")
+tm_shape(buildings)+
+tm_polygons(col = "buildingType",
+           size = 2,
+           border.col = "grey40",
+           border.lwd = 1,
+           palette = "Set2")
+  
+  
+```
+
+From the above visualization, we can see that the residential areas are in the outskirts where as Commercial areas are centrally located. Let us try to divide the City of Engagement based on the concentration of Residential or Commercial buildings.
+
+##Location of Pubs and Restaurants
+
+Let us now see where are the pubs and restaurants located in Engagement.
+
+```{r  fig.width= 20, fig.height= 12}
+tmap_mode("plot")
+tm_shape(buildings)+
+tm_polygons(col = "buildingType",
+           size = 2,
+           border.col = "grey40",
+           border.lwd = 1,
+           palette = "Set2")+
+    tm_shape(pubs)+
+    tm_dots(col = "green",
+            size = 0.5)+
+    tm_shape(restaurants)+
+    tm_dots(col = "blue",
+            size = 0.5)+
+  tm_add_legend(type = "fill",
+                labels = c("Restaurants","Pubs"),
+                col = c("blue","green"))
+  
+  
+```
+
+From the above visualization, it can be seen that many restaurants are located on the edge between the residential and commercial areas.
+There is a concentration of 3 pubs and a restaurant in the central area between residential and commercial buildings.
+
+## Identifying traffic bottle necks during peak hours
+
+### Let us consider the morning peak hours on a tuesday
+
+we will consider the time period between 7 and 10 am as the morning peak hours.
+
+```{r }
+
+logs_path <- logs_selected %>%
+  filter(day == 1) %>%
+  filter(hour >= 7) %>%
+  filter(hour <= 10) %>%
+  group_by(participantId,hour) %>%
+  summarize(m = mean(Timestamp), 
+          do_union=FALSE) %>%
+  ungroup() %>%
+  group_by(participantId) %>%
+  mutate(count = n()) %>%
+  filter(count > 1 )%>%
+    group_by(participantId) %>%
+  summarize(do_union=FALSE) %>%
+  st_cast("LINESTRING")
+```
+
+
+```{r  fig.width= 20, fig.height= 12}
+
+tmap_mode("plot")
+tm_shape(buildings)+
+tm_polygons(col = "buildingType",
+           size = 2,
+           border.col = "grey40",
+           border.lwd = 1,
+           palette = "Set2",
+           alpha = 0.3) +
+      tm_shape(pubs)+
+    tm_dots(col = "green",
+            size = 0.5)+
+    tm_shape(restaurants)+
+    tm_dots(col = "blue",
+            size = 0.5)+
+  tm_shape(logs_path)+
+    tm_lines(col = "red",
+             alpha = 0.3) +
+  tm_add_legend(type = "fill",
+                labels = c("Restaurants","Pubs"),
+                col = c("blue","green"))
+  
+
+tmap_mode("plot")
+
+
+```
+
+From the visualization above, we can see the traffic bottle necks during morning peak hours on a Tuesday. These are the areas with dark red color.It can be seen that the bottlenecks are where multiple paths converge between the residential and commercial areas.
+
+### Let us consider the evening peak hours on a tuesday
+
+We will consider the time period between 5pm to 7 pm as the evening peak hours
+
+```{r }
+
+logs__eve_path <- logs_selected %>%
+  filter(day == 1) %>%
+  filter(hour >= 17) %>%
+  filter(hour <= 19) %>%
+  group_by(participantId,hour) %>%
+  summarize(m = mean(Timestamp), 
+          do_union=FALSE) %>%
+  ungroup() %>%
+  group_by(participantId) %>%
+  mutate(count = n()) %>%
+  filter(count > 1 )%>%
+    group_by(participantId) %>%
+  summarize(do_union=FALSE) %>%
+  st_cast("LINESTRING")
+```
+
+
+```{r  fig.width= 20, fig.height= 12}
+
+tmap_mode("plot")
+tm_shape(buildings)+
+tm_polygons(col = "buildingType",
+           size = 2,
+           border.col = "grey40",
+           border.lwd = 1,
+           palette = "Set2",
+           alpha = 0.3) +
+      tm_shape(pubs)+
+    tm_dots(col = "green",
+            size = 0.5)+
+    tm_shape(restaurants)+
+    tm_dots(col = "blue",
+            size = 0.5)+
+  tm_shape(logs__eve_path)+
+    tm_lines(col = "cyan",
+             alpha = 0.3) +
+  tm_add_legend(type = "fill",
+                labels = c("Restaurants","Pubs"),
+                col = c("blue","green"))
+
+tmap_mode("plot")
+
+
+```
+
+### Let us try to add a layer to show the starting point of journeys of the participants inorder to understand the Origin of the evenig journeys.
+
+
+For this, we will find the first row of transport for each participant by selecting rows where the currentMode is Transport and the previous row is not Transport.
+
+```{r echo=FALSE, eval=FALSE}
+
+
+start_select <- logs %>%
+  mutate(Timestamp = date_time_parse(timestamp,
+                                     zone ="",
+                                     format= "%Y-%m-%dT%H:%M:%S")) %>%
+  filter(timestamp >= ymd_hms('2022-03-01 00:00:00') & timestamp < ymd_hms('2022-03-02 00:00:00')) %>%
+  group_by(participantId) %>%
+  mutate(startTravel = ifelse(lag(currentMode) != 'Transport' & currentMode =='Transport','Start','InTransport')) %>%
+  filter(startTravel == 'Start') %>%
+  mutate(hour = get_hour(Timestamp))
+```
+
+
+```{r echo=FALSE, eval=FALSE}
+write_rds(start_select, "data/rds/start_select.rds")
+
+```
+
+```{r echo= FALSE}
+
+start_select <- read_rds("data/rds/start_select.rds")
+
+```
+
+```{r}
+
+starting_point <- start_select %>%
+  filter(hour >= 17) %>%
+  filter(hour <= 19) %>%
+  group_by(participantId) %>%
+  summarize(start = min(Timestamp), minCurrentLocation = currentLocation[which(Timestamp == min(Timestamp))])
+  
+```
+
+
+```{r  fig.width= 20, fig.height= 12}
+
+tmap_mode("plot")
+tm_shape(buildings)+
+tm_polygons(col = "buildingType",
+           size = 2,
+           border.col = "grey40",
+           border.lwd = 1,
+           palette = "Set2",
+           alpha = 0.3) +
+      tm_shape(pubs)+
+    tm_dots(col = "green",
+            size = 0.5)+
+    tm_shape(restaurants)+
+    tm_dots(col = "blue",
+            size = 0.5)+
+      tm_shape(starting_point)+
+    tm_bubbles(col = "red",
+            size = 0.5,
+            shape = 1)+
+  tm_add_legend(type = "fill",
+                labels = c("Restaurants","Pubs"),
+                col = c("blue","green"))
+
+tmap_mode("plot")
+
+
+```
+
+
+```{r}
+
+starting_point <- start_select %>%
+  filter(hour >= 14) %>%
+  filter(hour <= 17) %>%
+  group_by(participantId) %>%
+  summarize(start = min(Timestamp), minCurrentLocation = currentLocation[which(Timestamp == min(Timestamp))])
+  
+```
+
+
+```{r fig.width= 20, fig.height= 12}
+
+tmap_mode("plot")
+tm_shape(buildings)+
+tm_polygons(col = "buildingType",
+           size = 2,
+           border.col = "grey40",
+           border.lwd = 1,
+           palette = "Set2",
+           alpha = 0.3) +
+      tm_shape(pubs)+
+    tm_dots(col = "green",
+            size = 0.5)+
+    tm_shape(restaurants)+
+    tm_dots(col = "blue",
+            size = 0.5)+
+      tm_shape(starting_point)+
+    tm_bubbles(col = "red",
+            size = 0.5,
+            shape = 1)+
+  tm_add_legend(type = "fill",
+                labels = c("Restaurants","Pubs"),
+                col = c("blue","green"))
+
+tmap_mode("plot")
+
+
+```
+
+
+During the evening peak hours, it can be seen that the traffic bottle necks are more or less in the same areas as in the morning. But, interestingly, it can be seen that there is high traffic in the region with the 3 pubs and a restaurant.
+
+
+## Origin of Morning peak hour traffic
+
+```{r}
+
+starting_point <- start_select %>%
+  filter(hour >= 5) %>%
+  filter(hour <= 10) %>%
+  group_by(participantId) %>%
+  summarize(start = min(Timestamp), minCurrentLocation = currentLocation[which(Timestamp == min(Timestamp))])
+  
+```
+
+
+```{r fig.width= 20, fig.height= 12}
+
+tmap_mode("plot")
+tm_shape(buildings)+
+tm_polygons(col = "buildingType",
+           size = 2,
+           border.col = "grey40",
+           border.lwd = 1,
+           palette = "Set2",
+           alpha = 0.3) +
+      tm_shape(pubs)+
+    tm_dots(col = "green",
+            size = 0.5)+
+    tm_shape(restaurants)+
+    tm_dots(col = "blue",
+            size = 0.5)+
+      tm_shape(starting_point)+
+    tm_bubbles(col = "red",
+            size = 0.5,
+            shape = 1)+
+  tm_add_legend(type = "fill",
+                labels = c("Restaurants","Pubs"),
+                col = c("blue","green"))
+
+tmap_mode("plot")
+
+
+```

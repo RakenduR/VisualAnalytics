@@ -253,10 +253,13 @@ girafe(
 )
 
 ```
+```{r}
+write_rds(participant_fin, "data/rds/participant_fin.rds")
+```
+
 ## Observing the variation in Income and Expense of the participants over the time period
 
 ```{r  fig.width=24, fig.height=8}
-
 
 
 participant_fin %>%

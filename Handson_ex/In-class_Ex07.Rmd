@@ -90,7 +90,130 @@ ggraph(gastech_graph,
 
 
 ```
+## Modifying the nodes
+
+```{r}
+
+ggraph(gastech_graph,
+       layout = "stress")+
+  geom_edge_link()+
+  geom_node_point(aes(colour = Department,
+                      size = 3)) +
+  theme_graph()
+```
 fr is force directed layout and will keep on changing. Hence important to set.seed so that the layout doesnt change. When the fr generate the layout, it will use gravitational force and push force.
 Where as for stress(default) layout, the layout will be same without set.seed.
 
+## Modifying the edges
 
+```{r}
+ggraph(gastech_graph,
+       layout = "stress")+
+  geom_edge_link(aes(width=Weight),
+                 alpha =0.2)+
+  scale_edge_width(range = c(0.1,5))+
+  geom_node_point(aes(colour = Department,
+                      size = 3)) +
+  theme_graph()
+```
+## Working with Facet
+
+```{r}
+
+ggraph(gastech_graph,
+       layout = "stress")+
+  geom_edge_link(aes(width=Weight),
+                 alpha =0.2)+
+  scale_edge_width(range = c(0.1,5))+
+  geom_node_point(aes(colour = Department,
+                      size = 2)) +
+  theme_graph() +
+  facet_edges((~Weekday))
+```
+
+```{r}
+ggraph(gastech_graph,
+       layout = "stress")+
+  geom_edge_link(aes(width=Weight),
+                 alpha =0.2)+
+  scale_edge_width(range = c(0.1,5))+
+  geom_node_point(aes(colour = Department,
+                      size = 3)) +
+  theme_graph()
+```
+## Working with Facet by node
+
+```{r}
+
+ggraph(gastech_graph,
+       layout = "stress")+
+  geom_edge_link(aes(width=Weight),
+                 alpha =0.2)+
+  scale_edge_width(range = c(0.1,5))+
+  geom_node_point(aes(colour = Department,
+                      size = 2)) +
+  theme_graph() +
+  facet_nodes((~Department))
+```
+
+## How to incorporate centrality measure in our visualization
+
+Compute the connectivity index
+
+```{r}
+gastech_graph %>%
+  mutate(betweenness_centrality = centrality_betweenness()) %>%
+  ggraph(layout = "stress")+
+  geom_edge_link(aes(width=Weight),
+                 alpha =0.2)+
+  scale_edge_width(range = c(0.1,5))+
+  geom_node_point(aes(colour = Department,
+                      size = betweenness_centrality)) +
+  theme_graph()
+
+```
+
+## Interactivity for Network Graph using visNetwork
+
+Data Preparation
+
+```{r}
+
+GAStech_edges_aggregated <- GAStech_edges %>%
+  left_join(GAStech_nodes, by = c("sourceLabel" = "label")) %>%
+  rename(from = id) %>%
+  left_join(GAStech_nodes, by = c("targetLabel" = "label")) %>%
+  rename(to = id) %>%
+  filter(MainSubject == "Work related") %>%
+  group_by(from, to) %>%
+    summarise(weight = n()) %>%
+  filter(from!=to) %>%
+  filter(weight > 1) %>%
+  ungroup()
+```
+
+```{r}
+
+visNetwork(GAStech_nodes,
+           GAStech_edges_aggregated)
+```
+Push ensures that they are spread out and pull/gravitational force makes sure that they stay together.
+
+```{r}
+
+visNetwork(GAStech_nodes,
+           GAStech_edges_aggregated) %>%
+  visIgraphLayout(layout = "layout_with_fr")
+```
+
+```{r}
+GAStech_nodes <- GAStech_nodes %>%
+  rename(group = Department)
+```
+
+```{r}
+visNetwork(GAStech_nodes,
+           GAStech_edges_aggregated) %>%
+  visIgraphLayout()
+
+```
