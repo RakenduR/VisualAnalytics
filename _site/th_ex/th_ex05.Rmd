@@ -101,6 +101,9 @@ logs_selected <- read_rds("data/rds/logs_selected.rds")
 
 ## Visualizing the location of Residential and Commercial buildings
 
+To view the regions where there are more residential vs commercial buildings, we will use thematic maps to visualize the buildings, colored by buildingType.
+
+
 ```{r  fig.width= 16, fig.height= 10}
 tmap_mode("plot")
 tm_shape(buildings)+
@@ -108,16 +111,22 @@ tm_polygons(col = "buildingType",
            size = 2,
            border.col = "grey40",
            border.lwd = 1,
-           palette = "Set2")
+           palette = "Set2") +
+  tm_layout(main.title = "Distribution of Residential and Commercial Buildings",
+            main.title.size = 3)
   
   
 ```
 
-From the above visualization, we can see that the residential areas are in the outskirts where as Commercial areas are centrally located. Let us try to divide the City of Engagement based on the concentration of Residential or Commercial buildings.
+From the above visualization, we can see that the residential areas are in the outskirts where as Commercial areas are centrally located. 
+
 
 ##Location of Pubs and Restaurants
 
 Let us now see where are the pubs and restaurants located in Engagement.
+
+For this, we will plot the pubs and restaurants as dots on the above thematic map so that we can see where they are located with respect to residential and commerical buildings.
+
 
 ```{r  fig.width= 20, fig.height= 12}
 tmap_mode("plot")
@@ -129,13 +138,15 @@ tm_polygons(col = "buildingType",
            palette = "Set2")+
     tm_shape(pubs)+
     tm_dots(col = "green",
-            size = 0.5)+
+            size = 1)+
     tm_shape(restaurants)+
     tm_dots(col = "blue",
-            size = 0.5)+
+            size = 1)+
   tm_add_legend(type = "fill",
                 labels = c("Restaurants","Pubs"),
-                col = c("blue","green"))
+                col = c("blue","green"))+
+  tm_layout(main.title = "Location of Pubs and Restaurants in Engagement, Ohio",
+            main.title.size = 3)
   
   
 ```
@@ -148,6 +159,9 @@ There is a concentration of 3 pubs and a restaurant in the central area between 
 ### Let us consider the morning peak hours on a tuesday
 
 we will consider the time period between 7 and 10 am as the morning peak hours.
+
+We will take only those records for which there are atleast 2 or more log records during this period so that we can visualise their travel path. For this we take the count of records for each participant and then filter by the number of records greater than 1.
+
 
 ```{r }
 
@@ -189,7 +203,9 @@ tm_polygons(col = "buildingType",
              alpha = 0.3) +
   tm_add_legend(type = "fill",
                 labels = c("Restaurants","Pubs"),
-                col = c("blue","green"))
+                col = c("blue","green"))+
+  tm_layout(main.title = "Morning Traffic bottlenecks in Engagement, Ohio",
+            main.title.size = 3)
   
 
 tmap_mode("plot")
@@ -197,9 +213,9 @@ tmap_mode("plot")
 
 ```
 
-From the visualization above, we can see the traffic bottle necks during morning peak hours on a Tuesday. These are the areas with dark red color.It can be seen that the bottlenecks are where multiple paths converge between the residential and commercial areas.
+From the visualization above, we can see the traffic bottle necks during morning peak hours on Tuesdays. These are the areas with dark red color.It can be seen that the bottlenecks are where multiple paths converge between the residential and commercial areas.
 
-### Let us consider the evening peak hours on a tuesday
+### Let us consider the evening peak hours on tuesdays
 
 We will consider the time period between 5pm to 7 pm as the evening peak hours
 
@@ -243,17 +259,21 @@ tm_polygons(col = "buildingType",
              alpha = 0.3) +
   tm_add_legend(type = "fill",
                 labels = c("Restaurants","Pubs"),
-                col = c("blue","green"))
+                col = c("blue","green"))+
+  tm_layout(main.title = "Evening Traffic bottlenecks in Engagement, Ohio",
+            main.title.size = 3)
 
 tmap_mode("plot")
 
 
 ```
 
-### Let us try to add a layer to show the starting point of journeys of the participants inorder to understand the Origin of the evenig journeys.
+From the above visualization of evening traffic, we can see that the traffic bottlenecks are in th same areas as the mornings. It can be seen there is high traffic near the region with the 3 pubs and a restaurant.
+
+### Let us try to add a layer to show the starting point of journeys of the participants inorder to understand the Origin of the journeys.
 
 
-For this, we will find the first row of transport for each participant by selecting rows where the currentMode is Transport and the previous row is not Transport.
+For this, we will find the first row of transport for each participant by selecting rows where the currentMode is Transport and the previous row is not Transport. 
 
 ```{r echo=FALSE, eval=FALSE}
 
@@ -280,6 +300,64 @@ write_rds(start_select, "data/rds/start_select.rds")
 start_select <- read_rds("data/rds/start_select.rds")
 
 ```
+
+We will take the time period between 5 am and 10 am to see all the participants morning travel origin.
+
+
+```{r}
+
+starting_point <- start_select %>%
+  filter(hour >= 5) %>%
+  filter(hour <= 10) %>%
+  group_by(participantId) %>%
+  summarize(start = min(Timestamp), minCurrentLocation = currentLocation[which(Timestamp == min(Timestamp))])
+  
+```
+
+We will now plot the origin points on the thematic map showing residential and commercial areas.
+
+
+```{r fig.width= 20, fig.height= 12}
+
+tmap_mode("plot")
+tm_shape(buildings)+
+tm_polygons(col = "buildingType",
+           size = 2,
+           border.col = "grey40",
+           border.lwd = 1,
+           palette = "Set2",
+           alpha = 0.3) +
+      tm_shape(pubs)+
+    tm_dots(col = "green",
+            size = 0.5)+
+    tm_shape(restaurants)+
+    tm_dots(col = "blue",
+            size = 0.5)+
+      tm_shape(starting_point)+
+    tm_bubbles(col = "red",
+            size = 0.5,
+            shape = 1)+
+  tm_add_legend(type = "fill",
+                labels = c("Restaurants","Pubs"),
+                col = c("blue","green"))+
+  tm_layout(main.title = "Morning Traffic Origins in Engagement, Ohio",
+            main.title.size = 3)
+
+tmap_mode("plot")
+
+
+```
+
+
+
+
+
+From the above visualization, it can be seen that the origin points are concentrated in the residential areas as expected. Also, notice that there are lesser origin points in the southern regions. 
+
+This could be because we have lesser participants from this region.
+
+Let us now observe the origin points of the evening traffic.
+
 
 ```{r}
 
@@ -314,12 +392,20 @@ tm_polygons(col = "buildingType",
             shape = 1)+
   tm_add_legend(type = "fill",
                 labels = c("Restaurants","Pubs"),
-                col = c("blue","green"))
+                col = c("blue","green"))+
+  tm_layout(main.title = "Evening Traffic Origins in Engagement, Ohio",
+            main.title.size = 3)
 
 tmap_mode("plot")
 
 
 ```
+
+Evening traffic origin is not as well defined as the morning traffic origin, we can see that many origin points are in the residential areas where as one would expect the evening traffic to origin mainly in the commercial areasa.
+
+On further exploring the dataset, it is seen that the participants reach back home and then again leave home for recreational activities resulting in origin points in the residential areas.
+
+To overcome this, we will change the time period to 2pm to 5 pm. Now it can be observed that most of the origin points are in the commercial areas.
 
 
 ```{r}
@@ -355,7 +441,9 @@ tm_polygons(col = "buildingType",
             shape = 1)+
   tm_add_legend(type = "fill",
                 labels = c("Restaurants","Pubs"),
-                col = c("blue","green"))
+                col = c("blue","green"))+
+  tm_layout(main.title = "Early Evening Traffic origins in Engagement, Ohio",
+            main.title.size = 3)
 
 tmap_mode("plot")
 
@@ -363,47 +451,15 @@ tmap_mode("plot")
 ```
 
 
-During the evening peak hours, it can be seen that the traffic bottle necks are more or less in the same areas as in the morning. But, interestingly, it can be seen that there is high traffic in the region with the 3 pubs and a restaurant.
+## Conclusion
 
+* Residential areas are mainly concentrated in the outskirts and commercial areas are towards the central region of Engagement.
 
-## Origin of Morning peak hour traffic
+* Pubs and restaurants are distributed more or less uniformly with some concentration seen in the central region.
 
-```{r}
+* Traffic bottlenecks are in the regions where multiple roads converge between residential and commercial areas.
 
-starting_point <- start_select %>%
-  filter(hour >= 5) %>%
-  filter(hour <= 10) %>%
-  group_by(participantId) %>%
-  summarize(start = min(Timestamp), minCurrentLocation = currentLocation[which(Timestamp == min(Timestamp))])
-  
-```
+* Traffic bottlenecks are in the same regions during morning and evening peak hours during a weekday.
 
+* Origin of traffic in the morning peak hours are from residential areas where as evening peak traffic has origin in both residential as well as commercial areas owing to people heading to reacreational activities in the evening.
 
-```{r fig.width= 20, fig.height= 12}
-
-tmap_mode("plot")
-tm_shape(buildings)+
-tm_polygons(col = "buildingType",
-           size = 2,
-           border.col = "grey40",
-           border.lwd = 1,
-           palette = "Set2",
-           alpha = 0.3) +
-      tm_shape(pubs)+
-    tm_dots(col = "green",
-            size = 0.5)+
-    tm_shape(restaurants)+
-    tm_dots(col = "blue",
-            size = 0.5)+
-      tm_shape(starting_point)+
-    tm_bubbles(col = "red",
-            size = 0.5,
-            shape = 1)+
-  tm_add_legend(type = "fill",
-                labels = c("Restaurants","Pubs"),
-                col = c("blue","green"))
-
-tmap_mode("plot")
-
-
-```
