@@ -1,0 +1,154 @@
+---
+title: "Take Home Exercise 06"
+description: |
+  Visualising and Analysing Community Network
+author:
+  - name: Rakendu Ramesh 
+    url: https://www.linkedin.com/in/rakendu-ramesh/
+    affiliation: Singapore Management University
+    affiliation_url: https://www.linkedin.com/showcase/smumitb/
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Objective
+
+To understand the social networks in the City of Engagement, Ohio.
+
+
+## Getting Started
+
+We will first load the required packages using the below code chunk
+
+```{r}
+packages = c('tidyverse', 'tidygraph', 'ggraph','visNetwork','lubridate','clock')
+
+for(p in packages){
+  if(!require(p,character.only = TRUE)){
+    install.packages(p)
+  }
+  library(p, character.only = TRUE)
+}
+```
+
+
+## Importing data
+
+Let us import the social network data of the participants and save it to an rds file. We will also import the participants to understand patterns.
+
+```{r echo=FALSE, eval=FALSE}
+edgeData  <- read_csv("data/SocialNetwork.csv")
+
+```
+
+
+
+
+```{r}
+participantData <- read_csv("data/Participants.csv")
+
+participantData$agegroup <- cut(participantData$age, breaks = c(17,30,40,50,60), 
+                             labels = c("18-30","30-40","40-50","50-60"))
+
+```
+
+## Data Wrangling
+
+We will group the data by the participantId pairs and add count column to understand how strong the relationship between 2 participants is, considering the relationship to be strong with higher number of times the participants interact with each other.
+
+
+```{r echo=FALSE, eval=FALSE}
+
+countEdgeData <- edgeData %>%
+  group_by(participantIdFrom,participantIdTo) %>%
+  summarise(count = n()) %>%
+ungroup()
+
+```
+
+Since the Social data is huge size. Let us save it as an rds file. We will use this rds file going forward.
+
+
+```{r echo=FALSE, eval=FALSE}
+write_rds(countEdgeData, "data/rds/countEdgeData.rds")
+
+```
+
+```{r echo= FALSE}
+
+countEdgeData <- read_rds("data/rds/countEdgeData.rds")
+
+```
+
+Let us see the distribution of counts of interaction between participants. It is seen that the vast 
+majority of participant pairs have counts less than 100.
+
+```{r}
+hist(countEdgeData$count)
+```
+
+
+```{r}
+
+NodeData <- countEdgeData %>% 
+  select(participantId = participantIdFrom) %>%
+  distinct(participantId) %>%
+  mutate(participantId = as.character(participantId)) %>%
+  merge(participantData)
+  
+countEdgeData <- countEdgeData %>%
+    filter(count > 250) %>%
+  mutate(participantIdFrom = as.character(participantIdFrom)) %>%
+  mutate(participantIdTo = as.character(participantIdTo))
+
+
+```
+
+
+Let us now construct the network graph data.frame of Tidygraph. We will then review the number of nodes and edges in the tbl_graph object.
+We can also see that the Node data is active.
+
+
+```{r}
+social_graph <- tbl_graph(nodes = NodeData,
+                           edges = countEdgeData,
+                           directed = TRUE)
+
+social_graph
+```
+
+
+### Let us now visualize the network using ggraph
+
+We will use width of the edges to represent the weight of the edge. we will also increase transparency of the edges for better clarity.
+We will also color the nodes based on the education level of the participants. We will also adjust the size of the nodes based on the age of the participants.
+
+
+```{r fig.width= 16, fig.height= 10}
+set.seed(1234)
+
+ggraph(social_graph,
+       layout = "stress")+
+  geom_edge_link(aes(width=count),
+                 alpha =0.2)+
+  scale_edge_width(range = c(0.1,5))+
+  geom_node_point(aes(colour = educationLevel, size = agegroup))+
+  theme_graph()
+
+
+```
+
+## Conclusion
+
+* From the network graph above, we can see that the participants with different Education Levels are more or less equally distributed among the network.
+
+* Similarly, different age groups can be seen present throughout the network.
+
+* Probably the reason we do not see a definite pattern from the network graph maybe because we have filtered out the edges with weight less than 250. This has also resulted in the network getting broken resulting in a large number of isolated networks.

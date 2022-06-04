@@ -28,7 +28,7 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ## Dataset
 
-To begin with, let us understand the distribution of Residential and Commercial Buildings in Engagement. We will also include schools in the visualisation to see if they reveal any patterns.
+To begin with, let us understand the distribution of Residential and Commercial Buildings in Engagement. We will also include schools in the visualization to see if they reveal any patterns.
 
 For this visualization, we will use the Buildings data set.
 
@@ -461,5 +461,5 @@ tmap_mode("plot")
 
 * Traffic bottlenecks are in the same regions during morning and evening peak hours during a weekday.
 
-* Origin of traffic in the morning peak hours are from residential areas where as evening peak traffic has origin in both residential as well as commercial areas owing to people heading to reacreational activities in the evening.
+* Origin of traffic in the morning peak hours are from residential areas where as evening peak traffic has origin in both residential as well as commercial areas owing to people heading to recreational activities in the evening.
 
