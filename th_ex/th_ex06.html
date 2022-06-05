@@ -2539,7 +2539,13 @@ column to understand how strong the relationship between 2 participants
 is, considering the relationship to be strong with higher number of
 times the participants interact with each other.</p>
 <div class="layout-chunk" data-layout="l-body">
-
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class="va">countEdgeData</span> <span class="op">&lt;-</span> <span class="va">edgeData</span> <span class="op">%&gt;%</span>
+  <span class="fu">group_by</span><span class="op">(</span><span class="va">participantIdFrom</span>,<span class="va">participantIdTo</span><span class="op">)</span> <span class="op">%&gt;%</span>
+  <span class="fu">summarise</span><span class="op">(</span>count <span class="op">=</span> <span class="fu">n</span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span>
+<span class="fu">ungroup</span><span class="op">(</span><span class="op">)</span>
+</code></pre>
+</div>
 </div>
 <p>Since the Social data is huge size. Let us save it as an rds file. We
 will use this rds file going forward.</p>
@@ -2547,7 +2553,10 @@ will use this rds file going forward.</p>
 
 </div>
 <div class="layout-chunk" data-layout="l-body">
-
+<div class="sourceCode">
+<pre class="sourceCode r"><code class="sourceCode r"><span class="va">countEdgeData</span> <span class="op">&lt;-</span> <span class="fu">read_rds</span><span class="op">(</span><span class="st">&quot;data/rds/countEdgeData.rds&quot;</span><span class="op">)</span>
+</code></pre>
+</div>
 </div>
 <p>Let us see the distribution of counts of interaction between
 participants. It is seen that the vast majority of participant pairs

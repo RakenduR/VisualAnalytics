@@ -64,7 +64,7 @@ participantData$agegroup <- cut(participantData$age, breaks = c(17,30,40,50,60),
 We will group the data by the participantId pairs and add count column to understand how strong the relationship between 2 participants is, considering the relationship to be strong with higher number of times the participants interact with each other.
 
 
-```{r echo=FALSE, eval=FALSE}
+```{r eval=FALSE}
 
 countEdgeData <- edgeData %>%
   group_by(participantIdFrom,participantIdTo) %>%
@@ -81,7 +81,7 @@ write_rds(countEdgeData, "data/rds/countEdgeData.rds")
 
 ```
 
-```{r echo= FALSE}
+```{r}
 
 countEdgeData <- read_rds("data/rds/countEdgeData.rds")
 
