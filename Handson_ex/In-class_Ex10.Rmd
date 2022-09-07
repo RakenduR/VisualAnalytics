@@ -1,0 +1,116 @@
+---
+title: "In-Class Exercise 10"
+description: |
+  Lesson 7: Modelling, Visualising and Analysing Network Data with R
+author:
+  - name: Rakendu 
+    url: https://www.linkedin.com/in/rakendu-ramesh/
+    affiliation: Singapore Management University
+    affiliation_url: https://scis.smu.edu.sg/
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE,
+                      fig.retina = 3)
+```
+
+```{r}
+packages = c('tidyverse', 'lubridate','tidyquant',
+             'ggHoriPlot','timetk','ggthemes','plotly')
+
+for(p in packages){
+  if(!require(p,character.only = TRUE)){
+    install.packages(p)
+  }
+  library(p, character.only = TRUE)
+}
+```
+
+
+```{r}
+
+company <- read_csv("data/companySG.csv")
+Top40 <- company %>%
+slice_max(`marketcap`, n=40) %>%
+select(symbol)
+
+```
+
+```{r}
+Stock40_daily <- Top40 %>%
+tq_get(get = "stock.prices",
+from = "2020-01-01",
+to = "2022-03-31") %>%
+group_by(symbol) %>%
+tq_transmute(select = NULL,
+mutate_fun = to.period,
+period = "days")
+
+```
+
+
+```{r}
+
+Stock40_daily %>%
+ggplot() +
+geom_horizon(aes(x = date, y=adjusted), origin = "midpoint", horizonscale = 6)+
+facet_grid(symbol~.)+
+theme_few() +
+scale_fill_hcl(palette = 'RdBu') +
+theme(panel.spacing.y=unit(0, "lines"), strip.text.y = element_text(
+size = 5, angle = 0, hjust = 0),
+legend.position = 'none',
+axis.text.y = element_blank(),
+axis.text.x = element_text(size=7),
+axis.title.y = element_blank(),
+axis.title.x = element_blank(),
+axis.ticks.y = element_blank(),
+panel.border = element_blank()
+) +
+scale_x_date(expand=c(0,0), date_breaks = "1 month", date_labels = "%b%y") +
+ggtitle('Daily Adjusted Prices (Jan 2020 to Mar 2022)')
+5
+
+
+```
+
+```{r}
+
+Stock40_daily <- Stock40_daily %>%
+left_join(company) %>%
+select(1:8,11:12)
+```
+```{r}
+Stock40_daily %>%
+  ggplot() +geom_horizon(aes(x = date, y=adjusted), origin ="midpoint", horizonscale =6)+
+  facet_grid(Name~.)+
+  geom_vline(xintercept = as.Date("2020-03-11"), colour ="grey15", linetype ="dashed", size =0.5)+
+  geom_vline(xintercept = as.Date("2020-12-14"), colour ="grey15", linetype ="dashed", size =0.5)+
+  theme_few() +
+  scale_fill_hcl(palette ='RdBu') +
+  theme(panel.spacing.y=unit(0,"lines"),
+        strip.text.y = element_text(size =5, angle =0, hjust =0),
+        legend.position ='none',
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(size=7),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.border = element_blank()) +
+  scale_x_date(expand=c(0,0), date_breaks ="1 month", date_labels ="%b%y") +
+  ggtitle('Daily Adjusted Prices (Jan 2020 to Mar 2022)')
+```
+
+```{r}
+Stock40_daily %>% 
+  filter(symbol =="DBSDF") %>%
+  ggplot(aes(x = date, y = close)) +
+  geom_line() +
+  labs(title ="DBS Group Holdings Ltd (DBSDF)",y ="Closing Price", x ="") +
+theme_tq()
+```

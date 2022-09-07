@@ -1,16 +1,14 @@
 ---
 title: "VisAnalytics Course"
 description: |
-  Welcome to the website. I hope you enjoy it!
+  Welcome to a very Visual sharing. I hope you enjoy it!
 site: distill::distill_website
 ---
 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
 
-# Learn more about creating websites with Distill at:
-# https://rstudio.github.io/distill/website.html
+Data Visualization is an integral part of Data Analysis and Data Analysis for the very simple reason that we all like and understand visuals more than paragraphs of text. Even more so if the visualization provides us the ability to interact with the data in the form of filters and selections.
 
-```
+The visualizations shared here are developed using **R**. The code chunks are also included for reproducibility. **GGplot** package in R allows us to build visuals from the scratch, giving us the flexibility to design the minutest detail in the graphic including axis, axis title, axis title font, axis tick marks, grid lines, legends, title, the list is quite long.
 
+Feel free to explore, any feedback and suggestions are welcome at [Linkedin](https://www.linkedin.com/in/rakendu-ramesh/)

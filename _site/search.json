@@ -3,18 +3,18 @@
     {
       "path": "about.html",
       "title": "About this site",
-      "description": "This website consists of a collection of works done for courses I took during my MITB(Analytics) journey. I hope you enjoy reading them!",
+      "description": "This website consists of a collection of works done for Visual Analytics course I took during my MITB(Analytics) journey. I hope you enjoy reading them!",
       "author": [],
       "contents": "\r\n\r\n\r\n\r\n",
-      "last_modified": "2022-04-17T11:39:21+08:00"
+      "last_modified": "2022-09-07T18:02:48+08:00"
     },
     {
       "path": "index.html",
       "title": "VisAnalytics Course",
-      "description": "Welcome to the website. I hope you enjoy it!\n",
+      "description": "Welcome to a very Visual sharing. I hope you enjoy it!\n",
       "author": [],
-      "contents": "\r\n\r\n\r\n\r\n",
-      "last_modified": "2022-06-05T10:34:43+08:00"
+      "contents": "\r\nData Visualization is an integral part of Data Analysis and Data\r\nAnalysis for the very simple reason that we all like and understand\r\nvisuals more than paragraphs of text. Even more so if the visualization\r\nprovides us the ability to interact with the data in the form of filters\r\nand selections.\r\nThe visualizations shared here are developed using\r\nR. The code chunks are also included for\r\nreproducibility. GGplot package in R allows us to build\r\nvisuals from the scratch, giving us the flexibility to design the\r\nminutest detail in the graphic including axis, axis title, axis title\r\nfont, axis tick marks, grid lines, legends, title, the list is quite\r\nlong.\r\nFeel free to explore, any feedback and suggestions are welcome at Linkedin\r\n\r\n\r\n\r\n",
+      "last_modified": "2022-09-07T18:09:49+08:00"
     }
   ],
   "collections": []

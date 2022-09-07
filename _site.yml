@@ -10,12 +10,6 @@ navbar:
     - text: "About"
       href: about.html
   left:
-    - text: "DataViz Makeover"
-      menu:
-      - text: "DataViz Makeover 1"
-        href: "DataViz1"
-      - text: "DataViz Makeover 2"
-        href: "DataViz2"
     - text: "Take-home Exercise"
       menu:
       - text: "Take-home Exercise 1"

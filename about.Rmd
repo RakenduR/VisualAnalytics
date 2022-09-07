@@ -1,7 +1,7 @@
 ---
 title: "About this site"
 description: |
-  This website consists of a collection of works done for courses I took during my MITB(Analytics) journey. I hope you enjoy reading them!
+  This website consists of a collection of works done for Visual Analytics course I took during my MITB(Analytics) journey. I hope you enjoy reading them!
 ---
 
 ```{r setup, include=FALSE}

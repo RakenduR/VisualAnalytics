@@ -1,0 +1,44 @@
+---
+title: "In-Class Exercise 09"
+description: |
+  Lesson 7: Modelling, Visualising and Analysing Network Data with R
+author:
+  - name: Rakendu 
+    url: https://www.linkedin.com/in/rakendu-ramesh/
+    affiliation: Singapore Management University
+    affiliation_url: https://scis.smu.edu.sg/
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      warning = FALSE,
+                      message = FALSE,
+                      fig.retina = 3)
+```
+
+```{r}
+packages = c('tidyverse', 'RODBC')
+
+for(p in packages){
+  if(!require(p,character.only = TRUE)){
+    install.packages(p)
+  }
+  library(p, character.only = TRUE)
+}
+```
+
+
+```{r}
+library(tidyverse)
+con <- odbcConnectAccess('data/Coffee Chain.mdb')
+coffeechain <- sqlFetch(con, 'CoffeeChain Query')
+write_rds(coffeechain, "data/CoffeeChain.rds")
+odbcClose(con)
+
+```
+
+
+
